@@ -1,0 +1,42 @@
+<template>
+  <vue-virtual-table
+    :config="tableConfig"
+    :data="tableData"
+    :itemHeight="55"
+    :minWidth="1000"
+    :maxHeight="600"
+    v-on:changeSelection="handleSelectionChange"
+  >
+    <template slot-scope="scope" slot="actionCommon">
+      <button @click="edit(scope.index, scope.row)">Edit</button>
+      <button @click="del(scope.index, scope.row)">Delete</button>
+    </template>
+  </vue-virtual-table>
+</template>
+
+<script>
+import VueVirtualTable from "vue-virtual-table";
+export default {
+  components: {
+    VueVirtualTable
+  },
+  props: ["tConfig", "tData"],
+  data: function() {
+    return {
+      tableConfig: this.tConfig,
+      tableData: this.tData
+    };
+  },
+  methods: {
+    handleSelectionChange(rows) {
+      console.log(rows);
+    },
+    edit(index, row) {
+      console.log(index, row);
+    },
+    del(index, row) {
+      console.log(index, row);
+    }
+  }
+};
+</script>
