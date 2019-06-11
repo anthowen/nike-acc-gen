@@ -6,7 +6,8 @@
   var logger = require("morgan");
   var bodyParser = require("body-parser");
   const cors = require("cors");
-  var nikeBot = require("./crawler/bot");
+  var createAccountBot = require("./crawler/create-bot");
+  var verifyAccountBot = require("./crawler/create-bot");
 
   const socketIo = require("socket.io");
   const PORT = 5000;
@@ -30,8 +31,8 @@
 
   let clientList = new Array();
 
-  var publicPath = path.resolve(__dirname, "./public");
-  var nodeModulesPath = path.resolve(__dirname, "./node_modules");
+  // var publicPath = path.resolve(__dirname, "./public");
+  // var nodeModulesPath = path.resolve(__dirname, "./node_modules");
 
   app.use(logger("dev"));
   app.use(bodyParser.urlencoded({ extended: false }));
@@ -55,20 +56,41 @@
 
   app.use(cors(corsOptions));
 
-  // Back end point for creating and verifying accounts
+  // Back end point for creating accounts
   app.post("/create", function(req, res) {
+    var proxy = req.body.proxy;
+    var user = req.body.user;
+
+    if (clientList && clientList.length) {
+      createAccountBot.doCreate(io, proxy, user);
+      res.json({
+        status: true,
+        proxy: proxy,
+        user: user,
+        message: "Create account request has finished"
+      });
+    } else {
+      res.json({
+        status: false,
+        message: "no socket has connected"
+      });
+    }
+  });
+
+  // Back end point for verifying accounts
+  app.post("/verify", function(req, res) {
     var proxy = req.body.proxy;
     var user = req.body.user;
     var sms = req.body.sms;
 
     if (clientList && clientList.length) {
-      nikeBot.startCreateAccount(io, proxy, user, sms);
+      verifyAccountBot.doVerify(io, proxy, user, sms);
       res.json({
         status: true,
         proxy: proxy,
         user: user,
         sms: sms,
-        message: "create account request has finished"
+        message: "Verify account request has finished"
       });
     } else {
       res.json({
@@ -99,7 +121,7 @@
     // initialize this client's sequence number
     clientList.push(client);
 
-    client.emit("statusEmit", "Client connection received");
+    client.emit("General", "Client connection received");
 
     client.on("error", error => {
       console.log(`[${client.id}] error: ${error}`);
@@ -107,7 +129,7 @@
 
     client.on("join", message => {
       console.log("joined with message : " + message);
-      client.broadcast.emit("statusEmit", "Join broadcasted");
+      client.broadcast.emit("General", "'" + message + "' message broadcasted");
     });
     // when socket disconnects, remove it from the list:
     client.on("disconnect", () => {

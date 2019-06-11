@@ -15,6 +15,19 @@ import FooterBar from "./components/FooterBar.vue";
 import "animate.css/animate.css";
 
 export default {
+  mounted() {
+    this.$socket.on("General", data => {
+      console.log("General event is trigged on App Main Client.");
+
+      if (typeof data === "string") console.log(data);
+      else if (typeof data === "object") {
+        this.tableData[data.index].status = {
+          code: data.code,
+          message: data.message
+        };
+      }
+    });
+  },
   components: {
     MenuBar,
     FooterBar

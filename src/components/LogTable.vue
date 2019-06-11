@@ -21,9 +21,9 @@
             <span
               class="float-left"
               :class="{
-                'text-nike-orange': value.code === 1,
+                'text-nike-orange': value.code === 0,
                 'text-nike-blue': value.code === 2,
-                'text-nike-cyan': value.code === 0,
+                'text-nike-cyan': value.code === 1,
                 'text-nike-purple': value.code === 4,
                 'text-nike-green': value.code === 6,
                 'text-nike-pink': value.code === 5,

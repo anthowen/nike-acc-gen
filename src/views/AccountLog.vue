@@ -38,11 +38,10 @@ export default {
     this.$nextTick(function() {
       this.tableData = this.$store.getters.pendingList;
       console.log("AccountLog page : After did mount");
-      console.log(this.tableData);
     });
 
-    this.$socket.on("statusEmit", data => {
-      console.log("statusEmit socket event is trigged on client");
+    this.$socket.on("CreateLog", data => {
+      console.log("CreateLog event is trigged on client.");
 
       if (typeof data === "string") console.log(data);
       else if (typeof data === "object") {
@@ -87,7 +86,7 @@ export default {
           sms: null
         })
         .then(response => {
-          console.log("2. server response:" + response.data.unique);
+          console.log("server response:" + response.data.unique);
           // this.valid = response.data.unique;
           console.log(response.data);
         });

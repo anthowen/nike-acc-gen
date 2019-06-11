@@ -312,7 +312,7 @@ export default {
           // gender: this.settings.gender.name,
           status: {
             code: 0,
-            message: "Pending ..."
+            message: "Idle"
           },
           email: ""
         };

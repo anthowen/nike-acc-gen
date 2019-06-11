@@ -11,11 +11,11 @@
       >Export</button>
       <button
         class="mx-5 px-10 py-2 order-solid border-2 border-nike-green text-white text-lg rounded-lg"
-        @click="startCreatingAccount"
+        @click="startVerification"
       >Start</button>
       <button
         class="mx-5 px-10 py-2 order-solid border-2 border-nike-red text-white text-lg rounded-lg"
-        @click="stopCreatingAccount"
+        @click="stopVerification"
       >Stop</button>
       <button
         class="mx-5 px-10 py-2 order-solid border-2 border-nike-yellow text-white text-lg rounded-lg"
@@ -29,34 +29,27 @@
   </div>
 </template>
 
-
 <script>
+import axios from "axios";
 import LogTable from "../components/LogTable.vue";
 
 export default {
   mounted() {
-    // this.$socket.on("statusEmit", data => {
-    //   console.log(
-    //     `this method was fired by the socket server. eg: io.emit("statusEmit", ${data})`
-    //   );
+    this.$nextTick(function() {
+      this.tableData = this.$store.getters.createdList;
+      console.log("Verify Log page : After did mount");
+    });
+    this.$socket.on("VerifyLog", data => {
+      console.log("VerifyLog event is trigged on client.");
 
-    //   this.tableData[data.index].status = {
-    //     code: data.code,
-    //     message: data.message
-    //   };
-    // });
-
-    for (let i = 0; i < 13; i++) {
-      this.tableData.push({
-        number: "1234567890",
-        account_email: this.getRandomString(10) + "@gmail.com",
-        password: "#new@e9sAQ123",
-        status: {
-          code: Math.floor(Math.random() * 7),
-          message: this.getRandomString(10)
-        }
-      });
-    }
+      if (typeof data === "string") console.log(data);
+      else if (typeof data === "object") {
+        this.tableData[data.index].status = {
+          code: data.code,
+          message: data.message
+        };
+      }
+    });
   },
   components: {
     LogTable
@@ -70,22 +63,43 @@ export default {
         { prop: "password", name: "Account Password" },
         { prop: "status", name: "Status" }
       ],
-      tableData: []
+      tableData: this.$store.getters.createdList
     };
   },
   methods: {
+    checkUniqueness(userInfo, smsInfo) {
+      console.log("checking uniqueness ");
+      return axios
+        .post("http://localhost:5000/create", {
+          proxy: null,
+          user: userInfo,
+          sms: smsInfo
+        })
+        .then(response => {
+          console.log("server response:" + response.data.unique);
+          // this.valid = response.data.unique;
+          console.log(response.data);
+        });
+    },
     exportLog() {},
     clearLog() {},
-    getRandomString(len) {
-      return [...Array(len)]
-        .map(() => (~~(Math.random() * 36)).toString(36))
-        .join("");
-    },
+    startVerification() {
+      const generalSettings = this.$store.getters.generalSettings;
 
-    startCreatingAccount() {
-      // let setting = this.$store.getters.accountSettings;
+      for (var i = 0; i < this.tableData.length; i++) {
+        this.checkUniqueness(
+          {
+            email: this.tableData[i].account_email,
+            password: this.tableData[i].password
+          },
+          generalSettings.sms["getsmscode"]
+        ).then(response => {
+          console.log("second catch response");
+          console.log(response.data);
+        });
+      }
     },
-    stopCreatingAccount() {},
+    stopVerification() {},
     retryFailedAccount() {}
   }
 };
