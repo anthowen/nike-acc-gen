@@ -98,19 +98,19 @@ let startCreateAccount = async (io, proxy, user, sms) => {
     if (process.env.NODE_ENV === "production")
       chromePath = "./chrome-win/chrome.exe";
     browser = await puppeteer.launch({
-      // headless: false,
-      slowMo: 50,
-      headless: true,
-      args: ["--fast-start", "--disable-extensions", "--no-sandbox"],
-      ignoreHTTPSErrors: true,
+      headless: false,
+      slowMo: 100,
+      // headless: true,
+      // args: ["--fast-start", "--disable-extensions", "--no-sandbox"],
+      // ignoreHTTPSErrors: true,
       executablePath: chromePath
     });
     page = await browser.newPage();
   }
 
   let country = "";
-  if (user.country === "UK") country = "uk";
-  else if (user.country === "CH") country = "ch";
+  if (user.country === "United Kingdom") country = "uk";
+  else if (user.country === "China") country = "ch";
   await page.setViewport({ width: 1200, height: 800 });
   await page.goto(`https://www.nike.com/${country}/launch/`);
 

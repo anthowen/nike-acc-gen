@@ -1,6 +1,7 @@
 {
   "name": "nike-acc-gen",
   "version": "0.1.0",
+  "author": "webtal blizzard <webtal.blizzard@gmail.com>",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",

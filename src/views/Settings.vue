@@ -7,13 +7,17 @@
       >These settings will be used when creating your Nike accounts</p>
 
       <div class="flex w-full pl-2 pr-2">
-        <div class="flex-1 px-4 py-2 m-2">
+        <div class="relative flex-1 px-4 py-2 m-2">
           <input
             class="border border-nike-border bg-nike-darkest rounded-lg h-10 w-full py-2 px-3 text-grey m-3"
             v-model="defaultSettings.discord"
             type="text"
             placeholder="Discord Webhook"
           >
+          <button
+            class="test-discord-webhook absolute px-4 py-1 order-solid border-2 border-nike-green text-white text-lg rounded-lg"
+            @click="testDiscordWebhook"
+          >Test</button>
           <nike-select
             :options="proxyGroup"
             :placeholder="'Proxy Group'"
@@ -219,6 +223,7 @@ export default {
       this.$store.commit("SET_ACCOUNT_SETTINGS", this.settings);
     },
 
+    testDiscordWebhook() {},
     saveDefaultSettings() {},
     resetDefaultSettings() {},
     saveProfileSettings() {},
@@ -226,4 +231,9 @@ export default {
   }
 };
 </script>
-
+<style>
+.test-discord-webhook {
+  right: 0.4rem;
+  top: 1.54rem;
+}
+</style>

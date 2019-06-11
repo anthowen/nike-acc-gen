@@ -35,15 +35,22 @@ import LogTable from "../components/LogTable.vue";
 
 export default {
   mounted() {
-    this.$socket.on("statusEmit", data => {
-      console.log(
-        `this method was fired by the socket server. eg: io.emit("statusEmit", ${data})`
-      );
+    this.$nextTick(function() {
+      this.tableData = this.$store.getters.pendingList;
+      console.log("AccountLog page : After did mount");
+      console.log(this.tableData);
+    });
 
-      this.tableData[data.index].status = {
-        code: data.code,
-        message: data.message
-      };
+    this.$socket.on("statusEmit", data => {
+      console.log("statusEmit socket event is trigged on client");
+
+      if (typeof data === "string") console.log(data);
+      else if (typeof data === "object") {
+        this.tableData[data.index].status = {
+          code: data.code,
+          message: data.message
+        };
+      }
     });
   },
   components: {
@@ -62,92 +69,14 @@ export default {
         { prop: "e_template", name: "Email Template " },
         { prop: "status", name: "Status" }
       ],
-      tableData: []
+      tableData: this.$store.getters.pendingList
     };
   },
   methods: {
     exportLog() {},
-    clearLog() {},
-    generateDotEmailNames(name) {
-      var length = name.length,
-        i,
-        j;
-      var combinations = Math.pow(2, length - 1);
-      var emailList = [];
-      for (i = 0; i < combinations; i++) {
-        var bin = this.decBin(i, length - 1);
-        var full = "";
-        for (j = 0; j < length - 1; j++) {
-          full += name[j];
-          if (bin[j] == 1) {
-            full += ".";
-          }
-        }
-        full += name[j];
-        emailList.push(full);
-      }
-
-      return emailList;
-    },
-    decBin(dec, length) {
-      var out = "";
-      while (length--) out += (dec >> length) & 1;
-      return out;
-    },
-    getRandomString(len) {
-      return [...Array(len)]
-        .map(() => (~~(Math.random() * 36)).toString(36))
-        .join("");
-    },
-    addAccountList(setting) {
-      let dotEmails,
-        dummy = {
-          first_name: setting.firstName,
-          last_name: setting.lastName,
-          country: setting.country.name,
-          number: "############",
-          e_domain: setting.emailDomain,
-          password: setting.password,
-          e_template: setting.emailTemplate,
-          gender: setting.gender.name,
-          status: {
-            code: 0,
-            message: "Pending ..."
-          },
-          email: ""
-        };
-
-      // Pre setting
-      if (setting.generatorType.type === 3) {
-        dummy.e_template = "";
-      } else {
-        var atPos = dummy.e_template.indexOf("@");
-        if (atPos > 0) dummy.e_template = dummy.e_template.substring(0, atPos);
-      }
-
-      if (setting.generatorType.type === 1) {
-        dotEmails = this.generateDotEmailNames(
-          dummy.e_template.replace(/\./g, "")
-        );
-      }
-
-      for (var i = 0; i < setting.accountQuantity; i++) {
-        let item = Object.assign({}, dummy);
-
-        if (setting.generatorType.type === 1) {
-          item.email = dotEmails[Math.floor(Math.random() * dotEmails.length)];
-        } else if (setting.generatorType.type === 2) {
-          item.email = item.e_template + "+" + this.getRandomString(6);
-        } else if (setting.generatorType.type === 3) {
-          item.email = this.getRandomString(10);
-        }
-
-        item.e_template = item.email;
-        item.email += item.e_domain;
-
-        console.log(item.email);
-        this.tableData.push(item);
-      }
+    clearLog() {
+      this.tableData.length = 0;
+      this.$store.commit("EMPTY_PENDING_LIST");
     },
     checkUniqueness(userInfo) {
       console.log("checking uniqueness ");
@@ -164,15 +93,6 @@ export default {
         });
     },
     async startCreatingAccount() {
-      let setting = this.$store.getters.accountSettings;
-
-      if (setting === null) {
-        alert("Setting has not finished yet");
-        return;
-      }
-
-      this.addAccountList(setting);
-
       this.$socket.emit("join", {
         message: "Create account started"
       });
@@ -189,6 +109,7 @@ export default {
             email: item.email,
             password: item.password,
             country: item.country,
+            // gender: item.gender,
             firstName: item.first_name,
             lastName: item.last_name
           })
@@ -207,7 +128,7 @@ export default {
       // var proxyUser = ""; //If proxy name/pass exists insert it here if not leave both variables blank
       // var proxyPass = "";
     },
-    stopCreatingAccount() {}
+    async stopCreatingAccount() {}
   }
 };
 </script>

@@ -165,9 +165,10 @@
 
 <script>
 import NikeSelect from "../components/NikeSelect.vue";
+import * as DotTricker from '../helpers/DotGmailGenerator';
 
 export default {
-  name: "home",
+  name: "AccountSettings",
   data() {
     return {
       errors:[],
@@ -181,19 +182,20 @@ export default {
         { name:"Male" },
         { name:"Female" }
       ],
-      countryOptions: [{ name: "UK" }, { name: "US" }, { name: "CH" }]
+      countryOptions: [{ name: "United Kingdom" }, { name: "United States" }, { name: "China" }]
     };
   },
   mounted () {
     this.$nextTick(function () {
       this.settings = this.$store.getters.accountSettings;
-      console.log('after did mount');
+      console.log('AccountSettings page : After did mount');
     })
   },
   components: {
     NikeSelect
   },
   methods: {
+    // onSelect callbacks
     onMailTrickSelect(payload) {
       this.settings.generatorType = payload;
       console.log(payload);
@@ -218,11 +220,24 @@ export default {
       this.settings.gender = payload;
     },
 
+    // helpers
     isEmptyString(str) {
         return (!str || 0 === str.length);
     },
 
-    saveSettings() {
+    getRandomString(len) {
+      return [...Array(len)]
+        .map(() => (~~(Math.random() * 36)).toString(36))
+        .join("");
+    },
+
+    // validation
+    validEmail(email) {
+      var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+      return re.test(email);
+    },
+
+    validate(){
       this.errors = [];
 
       if (this.isEmptyString(this.settings.firstName)) {
@@ -231,7 +246,19 @@ export default {
       if (this.isEmptyString(this.settings.lastName)) {
         this.errors.push('LastName required.');
       }
-      if(this.settings.generatorType.type < 3){
+
+      if(!this.settings.country){
+        this.errors.push('Country is required.');
+      }
+
+      if(!this.settings.gender){
+        this.errors.push('Gender is required.');
+      }
+
+      if(!this.settings.generatorType){
+        this.errors.push('Generator type is required.');
+      }
+      else if(this.settings.generatorType.type < 3){
         if (this.isEmptyString(this.settings.emailTemplate)) {
           this.errors.push('Email Template is required.');
         }
@@ -249,11 +276,18 @@ export default {
       }
 
       if(this.errors.length){
-        return;
+        return false;
       }
+      return true;
+    },
 
-      this.$store.commit("SET_ACCOUNT_SETTINGS", this.settings);
-      alert("Settings saved");
+    // button click actions
+    saveSettings() {
+      if(this.validate()){
+        this.$store.commit("SET_ACCOUNT_SETTINGS", this.settings);
+        this.$store.commit("ADD_TO_PENDING_LIST", this.getMockedAccountList());
+        alert("Settings saved");
+      }
     },
 
     resetSettings() {
@@ -265,10 +299,57 @@ export default {
       this.errors.length = 0;
     },
 
-    validEmail(email) {
-      var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-      return re.test(email);
-    }
+    getMockedAccountList() {
+      let data = [], dotEmails,
+        dummy = {
+          first_name: this.settings.firstName,
+          last_name: this.settings.lastName,
+          country: this.settings.country.name,
+          number: "############",
+          e_domain: this.settings.emailDomain,
+          password: this.settings.password,
+          e_template: this.settings.emailTemplate,
+          // gender: this.settings.gender.name,
+          status: {
+            code: 0,
+            message: "Pending ..."
+          },
+          email: ""
+        };
+
+      // Pre settings
+      if (this.settings.generatorType.type === 3) {
+        dummy.e_template = "";
+      } else {
+        var atPos = dummy.e_template.indexOf("@");
+        if (atPos > 0) dummy.e_template = dummy.e_template.substring(0, atPos);
+      }
+
+      if (this.settings.generatorType.type === 1) {
+        dotEmails = DotTricker.generate(
+          dummy.e_template.replace(/\./g, "")
+        );
+      }
+
+      for (var i = 0; i < this.settings.accountQuantity; i++) {
+        let item = Object.assign({}, dummy);
+
+        if (this.settings.generatorType.type === 1) {
+          item.email = dotEmails[Math.floor(Math.random() * dotEmails.length)];
+        } else if (this.settings.generatorType.type === 2) {
+          item.email = item.e_template + "+" + this.getRandomString(6);
+        } else if (this.settings.generatorType.type === 3) {
+          item.email = this.getRandomString(10);
+        }
+
+        item.e_template = item.email;
+        item.email += item.e_domain;
+
+        data.push(item);
+      }
+
+      return data;
+    },
   }
 };
 </script>
@@ -314,9 +395,9 @@ I'm not using Bootstrap. Now using Tailwind CSS, utility css. it's easy to read 
   border: 2px solid #fa6025;
   display: inline-block;
   vertical-align: middle;
-  width: 30px;
-  height: 30px;
-  padding: 4px 0px;
+  width: 20px;
+  height: 20px;
+  padding: 1px 0px;
   margin-right: 10px;
   text-align: center;
   border-radius: 0.4rem;

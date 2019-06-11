@@ -6,7 +6,7 @@
   var logger = require("morgan");
   var bodyParser = require("body-parser");
   const cors = require("cors");
-  var botUK = require("./crawler/bot-gb");
+  var nikeBot = require("./crawler/bot");
 
   const socketIo = require("socket.io");
   const PORT = 5000;
@@ -62,7 +62,7 @@
     var sms = req.body.sms;
 
     if (clientList && clientList.length) {
-      botUK.startCreateAccount(io, proxy, user, sms);
+      nikeBot.startCreateAccount(io, proxy, user, sms);
       res.json({
         status: true,
         proxy: proxy,

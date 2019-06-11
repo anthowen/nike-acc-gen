@@ -17,11 +17,17 @@ export default new Vuex.Store({
       country: null,
       gender: null,
       generatorType: null
-    }
+    },
+
+    // This is data for 'Account Log' page, and is going to be created.
+    pendingList: []
   },
   getters: {
     accountSettings: state => {
       return state.accountSettings;
+    },
+    pendingList: state => {
+      return state.pendingList;
     }
   },
   mutations: {
@@ -30,6 +36,14 @@ export default new Vuex.Store({
     },
     ADD_ACCOUNT_SETTINGS: (state, payload) => {
       state.accountSettings.push(payload);
+    },
+    ADD_TO_PENDING_LIST: (state, data) => {
+      console.log("committing ADD_TO_PENDING_LIST");
+      data.every(item => state.pendingList.push(item));
+    },
+    EMPTY_PENDING_LIST: state => {
+      console.log("committing EMPTY_PENDING_LIST");
+      state.pendingList.length = 0;
     }
   }
 });

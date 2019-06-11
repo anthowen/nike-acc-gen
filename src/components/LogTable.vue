@@ -20,12 +20,14 @@
           <div v-if="name ==='status'">
             <span
               class="float-left"
-              :class="{'text-nike-orange': value.code === 1, 'text-nike-blue': value.code === 2,
-          'text-nike-cyan': value.code === 0,
-          'text-nike-purple': value.code === 4,
-          'text-nike-green': value.code === 6,
-          'text-nike-pink': value.code === 5,
-          'text-nike-red': value.code === 3}"
+              :class="{
+                'text-nike-orange': value.code === 1,
+                'text-nike-blue': value.code === 2,
+                'text-nike-cyan': value.code === 0,
+                'text-nike-purple': value.code === 4,
+                'text-nike-green': value.code === 6,
+                'text-nike-pink': value.code === 5,
+                'text-nike-red': value.code === 3}"
             >{{ value.message }}</span>
             <span class="float-right">
               <span class="ml-2 rounded-full h-2 w-2 inline-block justify-center bg-nike-green"></span>
