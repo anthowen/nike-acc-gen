@@ -1,4 +1,4 @@
-![appstore](https://user-images.githubusercontent.com/4316355/48569610-354ed300-e8d0-11e8-8fde-e1d5631528dd.png)
+![appstore](https://github.com/blizzardsolution/nike-acc-gen/blob/master/screenshot_settings.png)
 
 # nike-acc-gen
 
