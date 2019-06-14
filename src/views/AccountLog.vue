@@ -49,6 +49,8 @@ export default {
           code: data.code,
           message: data.message
         };
+        if (data.message.includes("phonenumber"))
+          this.tableData[data.index].number = data.phonenumber;
       }
     });
   },
@@ -77,13 +79,13 @@ export default {
       this.tableData.length = 0;
       this.$store.commit("EMPTY_PENDING_LIST");
     },
-    checkUniqueness(userInfo) {
+    checkUniqueness(proxyInfo, userInfo, smsInfo) {
       console.log("checking uniqueness ");
       return axios
         .post("http://localhost:5000/create", {
-          proxy: null,
+          proxy: proxyInfo,
           user: userInfo,
-          sms: null
+          sms: smsInfo
         })
         .then(response => {
           console.log("server response:" + response.data.unique);
@@ -96,23 +98,32 @@ export default {
         message: "Create account started"
       });
 
+      const generalSettings = this.$store.getters.generalSettings;
       // a concurrency parameter of 1 makes all api requests secuential
       const MAX_SIMULTANEOUS_DOWNLOADS = 2;
       // init your manager.
       const queue = new TaskQueue(Promise, MAX_SIMULTANEOUS_DOWNLOADS);
 
       const results = await Promise.all(
-        this.tableData.map((item, index) =>
-          this.checkUniqueness({
-            tableIndex: index,
-            email: item.email,
-            password: item.password,
-            country: item.country,
-            // gender: item.gender,
-            firstName: item.first_name,
-            lastName: item.last_name
-          })
-        )
+        this.tableData.map((item, index) => {
+          if (item.status.code === 6) return;
+          this.checkUniqueness(
+            // {
+            //   url: "35.246.246.24:3128"
+            // },
+            null,
+            {
+              tableIndex: index,
+              email: item.email,
+              password: item.password,
+              country: item.country,
+              // gender: item.gender,
+              firstName: item.first_name,
+              lastName: item.last_name
+            },
+            generalSettings.sms["getsmscode"]
+          );
+        })
       ).then(responses => {
         // ...
         console.log("reponses.leng = " + responses.length);

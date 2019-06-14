@@ -52,7 +52,7 @@ let colors = {
   "nike-yellow": "#FDBD41",
   "nike-purple": "#8564A9",
   "nike-blue": "#3D5BB1",
-  "nike-cyan": "#E42B11",
+  "nike-cyan": "#22efdd",
   "nike-pink": "#235D89",
   "nike-grey": "#747474",
 

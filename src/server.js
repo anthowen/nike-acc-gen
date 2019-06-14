@@ -7,7 +7,8 @@
   var bodyParser = require("body-parser");
   const cors = require("cors");
   var createAccountBot = require("./crawler/create-bot");
-  var verifyAccountBot = require("./crawler/create-bot");
+  var verifyAccountBot = require("./crawler/verify-bot");
+  var chineseAccountBot = require("./crawler/chinese-bot");
 
   const socketIo = require("socket.io");
   const PORT = 5000;
@@ -60,14 +61,18 @@
   app.post("/create", function(req, res) {
     var proxy = req.body.proxy;
     var user = req.body.user;
+    var sms = req.body.sms;
 
     if (clientList && clientList.length) {
-      createAccountBot.doCreate(io, proxy, user);
+      if (user.country === "China")
+        chineseAccountBot.doCreate(io, proxy, user, sms);
+      else createAccountBot.doCreate(io, proxy, user);
+
       res.json({
         status: true,
         proxy: proxy,
         user: user,
-        message: "Create account request has finished"
+        message: "Create account requested"
       });
     } else {
       res.json({
@@ -90,7 +95,7 @@
         proxy: proxy,
         user: user,
         sms: sms,
-        message: "Verify account request has finished"
+        message: "Verify account requested"
       });
     } else {
       res.json({
@@ -108,7 +113,7 @@
     res.json({
       status: true,
       user: req.body.user,
-      message: "???? Index requested success"
+      message: "Index requested success"
     });
   });
 

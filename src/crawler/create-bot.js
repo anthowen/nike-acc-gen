@@ -1,18 +1,11 @@
-const puppeteer = require("puppeteer");
-const request = require("request");
 const fs = require("fs");
+const config = require("./config");
 
-var smsEmail = "ENTER GETSMSCODE.COM EMAIL ADDRESS";
-var token = "ENTER GETSMSCODE API TOKEN";
-var proxyUser = ""; //If proxy username/pass exists insert it here if not leave both variables blank
-var proxyPass = "";
-var info;
-var themessage;
 var userpass;
 
 //GET DOM TRAVERSAL VALUES
-const AcceptCookies =
-  "#cookie-settings-layout > div > div > div > div.ncss-row.mt5-sm.mb7-sm > div:nth-child(2) > button";
+// const AcceptCookies =
+//   "#cookie-settings-layout > div > div > div > div.ncss-row.mt5-sm.mb7-sm > div:nth-child(2) > button";
 const loginBtn = "li.member-nav-item.d-sm-ib.va-sm-m > button";
 const registerBtn = ".loginJoinLink.current-member-signin > a";
 const email = 'input[type="email"]';
@@ -29,50 +22,24 @@ function sleep(ms) {
 }
 
 let doCreate = async (io, proxy, user) => {
-  var page;
-  var browser;
-
-  console.log("The Create Bot is starting...");
-  io.sockets.emit("CreateLog", {
-    index: user.tableIndex,
-    code: 0,
-    message: "Bot started"
-  });
-
-  if (proxy) {
-    browser = await puppeteer.launch({
-      args: ["--proxy-server=" + proxy.url],
-      headless: false,
-      slowMo: 150
+  var browser = await config.browser(proxy);
+  var page = await browser.newPage();
+  if (proxy && proxy.user && proxy.pass) {
+    console.log("authenticating proxy user/pass");
+    await page.authenticate({
+      username: proxy.user,
+      password: proxy.pass
     });
-    page = await browser.newPage();
-
-    if (proxy.user !== "" && proxy.pass !== "") {
-      console.log("authenticating proxy user/pass");
-      await page.authenticate({
-        username: proxyUser,
-        password: proxyPass
-      });
-    }
-  } else {
-    let chromePath =
-      "./node_modules/puppeteer/.local-chromium/win64-662092/chrome-win/chrome.exe";
-    if (process.env.NODE_ENV === "production")
-      chromePath = "./chrome-win/chrome.exe";
-    browser = await puppeteer.launch({
-      headless: false,
-      slowMo: 100,
-      // headless: true,
-      // args: ["--fast-start", "--disable-extensions", "--no-sandbox"],
-      // ignoreHTTPSErrors: true,
-      executablePath: chromePath
-    });
-    page = await browser.newPage();
   }
 
+  // page.on("console", msg => {
+  //   for (let i = 0; i < msg.args().length; ++i)
+  //     console.log(`Console log from page; ${i}: ${msg.args()[i]}`);
+  // });
+
   let country = "";
-  if (user.country === "United Kingdom") country = "uk";
-  else if (user.country === "China") country = "ch";
+  if (user.country === "United Kingdom") country = "gb";
+
   await page.setViewport({ width: 1200, height: 800 });
   await page.goto(`https://www.nike.com/${country}/launch/`);
 

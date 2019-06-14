@@ -34,8 +34,9 @@ export default new Vuex.Store({
     // This is data for 'Verify Log' page, and is going to be verified.
     createdList: [
       {
+        country: "United Kingdom",
         number: "###########",
-        account_email: "james_stewart0123+nwg3it@gmail.com",
+        account_email: "garry.lampard+lzhb2q@gmail.com",
         password: "@tSt!~3ad#a",
         status: {
           code: 0,

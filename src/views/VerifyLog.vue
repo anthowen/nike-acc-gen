@@ -48,6 +48,8 @@ export default {
           code: data.code,
           message: data.message
         };
+        if (data.message.includes("phonenumber"))
+          this.tableData[data.index].number = data.phonenumber;
       }
     });
   },
@@ -58,6 +60,7 @@ export default {
     return {
       tableConfig: [
         { prop: "_index", name: "ID" },
+        { prop: "country", name: "Country" },
         { prop: "number", name: "Number" },
         { prop: "acc_email", name: "Account Email" },
         { prop: "password", name: "Account Password" },
@@ -67,11 +70,11 @@ export default {
     };
   },
   methods: {
-    checkUniqueness(userInfo, smsInfo) {
+    checkUniqueness(proxyInfo, userInfo, smsInfo) {
       console.log("checking uniqueness ");
       return axios
-        .post("http://localhost:5000/create", {
-          proxy: null,
+        .post("http://localhost:5000/verify", {
+          proxy: proxyInfo,
           user: userInfo,
           sms: smsInfo
         })
@@ -88,7 +91,13 @@ export default {
 
       for (var i = 0; i < this.tableData.length; i++) {
         this.checkUniqueness(
+          // {
+          //   url: "23.254.164.198:3128"
+          // },
+          null,
           {
+            tableIndex: i,
+            country: this.tableData[i].country,
             email: this.tableData[i].account_email,
             password: this.tableData[i].password
           },

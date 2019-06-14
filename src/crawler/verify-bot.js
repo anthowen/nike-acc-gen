@@ -1,33 +1,26 @@
-const puppeteer = require("puppeteer");
 const request = require("request");
 const fs = require("fs");
+const config = require("./config");
 
-var emailVal = "cto.sporting2019@gmail.com";
-var smsEmail = "ENTER GETSMSCODE.COM EMAIL ADDRESS";
-var token = "ENTER GETSMSCODE API TOKEN";
-var passwordVal = "aw@it2019#123AD";
-var fNameVal = "Mike";
-var sNameVal = "Johnatan";
-var proxyUrl = ""; //if proxy exists enter it in format IP:PORT, if not leave blank
-var proxyUser = ""; //If proxy username/pass exists insert it here if not leave both variables blank
-var proxyPass = "";
 var info;
 var themessage;
 var phoneNum;
 var userpass;
 
 //GET DOM TRAVERSAL VALUES
-const AcceptCookies =
-  "#cookie-settings-layout > div > div > div > div.ncss-row.mt5-sm.mb7-sm > div:nth-child(2) > button";
-const loginBtn = "li.member-nav-item.d-sm-ib.va-sm-m > button";
-const registerBtn = ".loginJoinLink.current-member-signin > a";
+// const AcceptCookies =
+//   "#cookie-settings-layout > div > div > div > div.ncss-row.mt5-sm.mb7-sm > div:nth-child(2) > button";
+const naviToLoginBtn = "li.member-nav-item.d-sm-ib.va-sm-m > button";
+
+const naviToMobileBtn =
+  "div.mex-account-settings-wrapper .mex-mobile-input button";
+
 const email = 'input[type="email"]';
 const password = 'input[type="password"]';
-const fName = '.firstName.nike-unite-component.empty > input[type="text"]';
-const sName = '.lastName.nike-unite-component.empty > input[type="text"]';
-const dob = 'input[type="date"]';
-const gender = 'li:nth-child(1) > input[type="button"]';
-const submit = '.joinSubmit.nike-unite-component > input[type="button"]';
+
+const loginSubmitBtn =
+  '.loginSubmit.nike-unite-component > input[type="button"]';
+
 const phone = "div.sendCode > div.mobileNumber-div > input";
 const sendNum =
   '#nike-unite-progressiveForm > div > div > input[type="button"]';
@@ -44,6 +37,8 @@ function callback(error, response, body) {
   if (!error && response.statusCode == 200) {
     info = body;
     console.log("Phone Number: " + info);
+  } else {
+    console.log("Reponse.statuscode = " + response.statusCode);
   }
 }
 
@@ -56,52 +51,26 @@ function callbacktwo(error, response, body) {
 }
 
 let doVerify = async (io, proxy, user, sms) => {
-  var page;
-  var browser;
-
-  console.log("The Verify Bot is starting...");
-  io.sockets.emit("VerifyLog", {
-    index: user.tableIndex,
-    code: 0,
-    message: "Bot started"
-  });
-
-  if (proxy) {
-    browser = await puppeteer.launch({
-      args: ["--proxy-server=" + proxy.url],
-      headless: false,
-      slowMo: 150
+  var browser = await config.browser(proxy);
+  var page = await browser.newPage();
+  if (proxy && proxy.user && proxy.pass) {
+    console.log("authenticating proxy user/pass");
+    await page.authenticate({
+      username: proxy.user,
+      password: proxy.pass
     });
-    page = await browser.newPage();
-
-    if (proxy.user !== "" && proxy.pass !== "") {
-      console.log("authenticating proxy user/pass");
-      await page.authenticate({
-        username: proxyUser,
-        password: proxyPass
-      });
-    }
-  } else {
-    let chromePath =
-      "./node_modules/puppeteer/.local-chromium/win64-662092/chrome-win/chrome.exe";
-    if (process.env.NODE_ENV === "production")
-      chromePath = "./chrome-win/chrome.exe";
-    browser = await puppeteer.launch({
-      headless: false,
-      slowMo: 100,
-      // headless: true,
-      // args: ["--fast-start", "--disable-extensions", "--no-sandbox"],
-      // ignoreHTTPSErrors: true,
-      executablePath: chromePath
-    });
-    page = await browser.newPage();
   }
 
   let country = "";
-  if (user.country === "United Kingdom") country = "uk";
-  else if (user.country === "China") country = "ch";
+  if (user.country === "United Kingdom") country = "gb";
+
   await page.setViewport({ width: 1200, height: 800 });
   await page.goto(`https://www.nike.com/${country}/launch/`);
+
+  // page.on("console", msg => {
+  //   for (let i = 0; i < msg.args().length; ++i)
+  //     console.log(`Console log from page; ${i}: ${msg.args()[i]}`);
+  // });
 
   // await page.click(AcceptCookies);
   // console.log("Accepted Cookies...");
@@ -109,62 +78,92 @@ let doVerify = async (io, proxy, user, sms) => {
   io.sockets.emit("VerifyLog", "Web page opened");
   await page.waitFor(1000);
 
-  await page.click(loginBtn);
-  console.log("Login Button Clicked...");
+  await page.click(naviToLoginBtn);
+  console.log("Login Dialog opened ...");
 
   await page.waitFor(2000);
+  await page.waitForSelector(email);
 
-  console.log("email: " + user.email);
+  console.log("input email: " + user.email);
+  await page.click(email);
   await page.type(email, user.email);
 
-  console.log("password: " + user.password);
+  console.log("input password: " + user.password);
   await page.type(password, user.password);
 
-  await page.click(submit);
-  console.log("submitted");
+  await page.click(loginSubmitBtn);
+
+  await new Promise(async function(resolve, reject) {
+    try {
+      const selectorPromise = page
+        .waitForSelector("div.root-controller>div.js-modal.modal", {
+          hidden: true,
+          timeout: 10000
+        })
+        .catch(reject);
+
+      await selectorPromise.then(resolve);
+    } catch (err) {
+      reject(err);
+
+      io.sockets.emit("VerifyLog", {
+        index: user.tableIndex,
+        code: 3,
+        message: "Email/pwd mismatch"
+      });
+      browser.close();
+      return;
+    }
+  });
+
+  console.log("login credential submitted");
 
   io.sockets.emit("VerifyLog", {
     index: user.tableIndex,
-    code: 4,
-    message: "Submitted"
+    code: 1,
+    message: "Login success"
   });
 
-  userpass = user.email + ":" + user.password;
-  console.log(userpass);
-
-  fs.appendFile("Accounts.txt", "\n" + userpass, err => {
-    if (err) throw err;
-    console.log("Added User/Pass To Accounts.txt!");
+  // await page.goto(`https://www.nike.com/${country}/member/settings`);
+  await page.waitForSelector("ul.right-nav li[data-qa=UserMenu] button", {
+    visible: true
   });
-  io.sockets.emit("VerifyLog", {
-    index: user.tableIndex,
-    code: 5,
-    message: "Credential saved"
-  });
+  await page.click("ul.right-nav li[data-qa=UserMenu] button");
+  await sleep(500);
+  await page.click(
+    "ul.right-nav li[data-qa=UserMenu] ul.dropdown-list-container li:first-child"
+  );
 
-  await sleep(2000);
-  browser.close();
+  await page.waitFor(10000);
 
   io.sockets.emit("VerifyLog", {
     index: user.tableIndex,
-    code: 6,
-    message: "Account created"
+    code: 2,
+    message: "Open settings"
   });
 
-  process.exit();
+  await page.click(naviToMobileBtn);
+  console.log("Mobile phone dialog opened ...");
 
   //values for phone number request
+  let params = "?username=" + sms.email + "&token=" + sms.token + "&action=";
+
+  let hostUrl =
+    "http://www.getsmscode.com/usdo.php" + params + "getmobile" + "&pid=628";
+  if (country === "gb") {
+    hostUrl =
+      "http://www.getsmscode.com/vndo.php" +
+      params +
+      "getmobile" +
+      "&pid=462&cocode=uk";
+  }
+
   const options = {
-    url:
-      "http://www.getsmscode.com/vndo.php?action=getmobile&username=" +
-      sms.email +
-      "&token=" +
-      sms.token +
-      "&cocode=" +
-      country +
-      "&pid=462",
+    url: hostUrl,
     headers: { "User-Agent": "request" }
   };
+
+  console.log(hostUrl);
 
   try {
     request(options, callback);
@@ -176,44 +175,72 @@ let doVerify = async (io, proxy, user, sms) => {
       process.exit();
     }
 
-    phoneNum = info.toString().slice(2);
+    phoneNum = info.toString().slice(country === "gb" ? 2 : 1);
 
     console.log("Phone number: " + phoneNum);
 
     console.log("waiting 5s");
     await page.waitFor(5000);
     console.log("waiting done");
+
     await page.screenshot({ path: "screenshot.png" });
     await page.click(phone);
+
     await page.type(phone, phoneNum);
-    console.log("entered phone number");
+
+    io.sockets.emit("VerifyLog", {
+      index: user.tableIndex,
+      code: 3,
+      message: "Enter phonenumber",
+      phonenumber: (country === "gb" ? "+44 " : "+1 ") + phoneNum
+    });
 
     console.log("waiting 2s");
     await page.waitFor(2000);
     console.log("waiting done");
 
     await page.click(sendNum);
-    console.log("pressed send number button");
 
-    console.log("Getting Text Message: 15s wait");
-    await sleep(15000);
+    io.sockets.emit("VerifyLog", {
+      index: user.tableIndex,
+      code: 4,
+      message: "Send SMS"
+    });
+
+    console.log("pressed send number button");
 
     console.log("Phone Number: " + phoneNum);
 
-    const values = {
-      url:
-        "http://www.getsmscode.com/vndo.php?action=getsms&username=" +
-        smsEmail +
-        "&token=" +
-        token +
+    hostUrl =
+      "http://www.getsmscode.com/usdo.php" +
+      params +
+      "getsms" +
+      "&pid=628&mobile=1" +
+      phoneNum;
+
+    if (country === "gb") {
+      hostUrl =
+        "http://www.getsmscode.com/vndo.php" +
+        params +
+        "getsms" +
         "&pid=462&cocode=uk&mobile=44" +
-        phoneNum,
+        phoneNum;
+    }
+    const values = {
+      url: hostUrl,
       headers: { "User-Agent": "request" }
     };
 
     await request(values, callbacktwo);
 
-    await sleep(1500);
+    themessage = null;
+    console.log("Getting Text Message: 30s wait");
+    await sleep(30000);
+
+    if (themessage === null) {
+      await sleep(10000);
+      if (themessage === null) await sleep(5000);
+    }
 
     if (themessage.includes("Nike")) {
       console.log("request complete");
@@ -226,28 +253,56 @@ let doVerify = async (io, proxy, user, sms) => {
 
       await sleep(500);
 
+      io.sockets.emit("VerifyLog", {
+        index: user.tableIndex,
+        code: 5,
+        message: "Enter SMS code"
+      });
+
       await page.click(storedSubmit);
       console.log("submitted");
-      userpass = emailVal + ":" + passwordVal;
+
+      userpass = user.email + ":" + user.password;
       console.log(userpass);
 
-      fs.appendFile("Accounts.txt", "\n" + userpass, err => {
+      fs.appendFile("VerifiedAccounts.txt", "\n" + userpass, err => {
         if (err) throw err;
-        console.log("Added User/Pass To Accounts.txt!");
+        console.log("Added User/Pass To VerifiedAccounts.txt!");
       });
     } else {
       console.log("failed to get sms from getsmscode.com");
+
+      throw new Error("SMS fetch error");
     }
+
+    io.sockets.emit("VerifyLog", {
+      index: user.tableIndex,
+      code: 5,
+      message: "SMS code success"
+    });
 
     await sleep(1000);
   } catch (error) {
     console.error(error);
     browser.close();
-    process.exit();
+
+    io.sockets.emit("VerifyLog", {
+      index: user.tableIndex,
+      code: 3,
+      message: "Failed to get SMS"
+    });
+    return;
   }
 
+  await sleep(3000);
+
+  io.sockets.emit("VerifyLog", {
+    index: user.tableIndex,
+    code: 6,
+    message: "Accont verified"
+  });
+
   browser.close();
-  process.exit();
 };
 
 module.exports = {
