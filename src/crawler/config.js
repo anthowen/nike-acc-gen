@@ -1,16 +1,12 @@
-const puppeteer = require("puppeteer");
-
 module.exports = {
-  async browser(proxy) {
+  async puppeteerOptions(proxy) {
     let chromePath =
-      "./node_modules/puppeteer/.local-chromium/win64-662092/chrome-win/chrome.exe";
+      "../node_modules/puppeteer/.local-chromium/win64-662092/chrome-win/chrome.exe";
     if (process.env.NODE_ENV === "production")
       chromePath = "./chrome-win/chrome.exe";
 
-    let browser;
-
     if (proxy) {
-      browser = await puppeteer.launch({
+      return {
         // args: ["--proxy-server=" + proxy.url],
         // headless: false,
         // slowMo: 100,
@@ -23,18 +19,16 @@ module.exports = {
           "--proxy-server=" + proxy.url
         ],
         executablePath: chromePath
-      });
+      };
     } else {
-      browser = await puppeteer.launch({
+      return {
         headless: false,
         slowMo: 100,
         // headless: true,
         // args: ["--fast-start", "--disable-extensions", "--no-sandbox"],
         ignoreHTTPSErrors: true,
         executablePath: chromePath
-      });
+      };
     }
-
-    return browser;
   }
 };

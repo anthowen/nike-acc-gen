@@ -20,6 +20,7 @@
     "fs": "0.0.1-security",
     "housecall": "^1.4.1",
     "puppeteer": "^1.17.0",
+    "puppeteer-cluster": "^0.16.0",
     "request": "^2.88.0",
     "socket.io": "^2.2.0",
     "socket.io-client": "^2.1.1",

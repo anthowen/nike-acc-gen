@@ -1,5 +1,4 @@
 const fs = require("fs");
-const config = require("./config");
 
 var userpass;
 
@@ -21,9 +20,7 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-let doCreate = async (io, proxy, user) => {
-  var browser = await config.browser(proxy);
-  var page = await browser.newPage();
+let doCreate = async (page, io, proxy, user) => {
   if (proxy && proxy.user && proxy.pass) {
     console.log("authenticating proxy user/pass");
     await page.authenticate({
@@ -39,6 +36,8 @@ let doCreate = async (io, proxy, user) => {
 
   let country = "";
   if (user.country === "United Kingdom") country = "gb";
+
+  console.log(`The ${user.country} bot is starting...`);
 
   await page.setViewport({ width: 1200, height: 800 });
   await page.goto(`https://www.nike.com/${country}/launch/`);
@@ -99,7 +98,7 @@ let doCreate = async (io, proxy, user) => {
   });
 
   await page.click(submit);
-  console.log("submitted");
+  console.log("submitting");
 
   io.sockets.emit("CreateLog", {
     index: user.tableIndex,
@@ -107,27 +106,43 @@ let doCreate = async (io, proxy, user) => {
     message: "Submitted"
   });
 
-  userpass = user.email + ":" + user.password;
-  console.log(userpass);
+  await page.waitFor(8000);
 
-  fs.appendFile("Accounts.txt", "\n" + userpass, err => {
-    if (err) throw err;
-    console.log("Added User/Pass To Accounts.txt!");
-  });
-  io.sockets.emit("CreateLog", {
-    index: user.tableIndex,
-    code: 5,
-    message: "Credential saved"
-  });
+  const submitError = await page.evaluate(() =>
+    document.querySelector(".invalid div.error")
+      ? document.querySelector(".invalid div.error").innerHTML
+      : null
+  );
 
-  await sleep(2000);
-  browser.close();
+  if (!submitError) {
+    userpass = user.email + ":" + user.password;
+    console.log(userpass);
 
-  io.sockets.emit("CreateLog", {
-    index: user.tableIndex,
-    code: 6,
-    message: "Account created"
-  });
+    fs.appendFile("Accounts.txt", "\n" + userpass, err => {
+      if (err) throw err;
+      console.log("Added User/Pass To Accounts.txt!");
+    });
+    io.sockets.emit("CreateLog", {
+      index: user.tableIndex,
+      code: 5,
+      message: "Credential saved"
+    });
+
+    await sleep(2000);
+
+    io.sockets.emit("CreateLog", {
+      index: user.tableIndex,
+      code: 6,
+      message: "Account created"
+    });
+  } else {
+    console.log(submitError);
+    io.sockets.emit("CreateLog", {
+      index: user.tableIndex,
+      code: 3,
+      message: "Error occured"
+    });
+  }
 };
 
 module.exports = {

@@ -87,7 +87,7 @@ export default {
     exportLog() {},
     clearLog() {},
     startVerification() {
-      const generalSettings = this.$store.getters.generalSettings;
+      const profileSettings = this.$store.getters.profileSettings;
 
       for (var i = 0; i < this.tableData.length; i++) {
         this.checkUniqueness(
@@ -101,7 +101,7 @@ export default {
             email: this.tableData[i].account_email,
             password: this.tableData[i].password
           },
-          generalSettings.sms["getsmscode"]
+          profileSettings.smsLogin["getsmscode"]
         ).then(response => {
           console.log("second catch response");
           console.log(response.data);

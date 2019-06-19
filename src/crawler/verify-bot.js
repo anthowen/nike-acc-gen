@@ -50,9 +50,7 @@ function callbacktwo(error, response, body) {
   }
 }
 
-let doVerify = async (io, proxy, user, sms) => {
-  var browser = await config.browser(proxy);
-  var page = await browser.newPage();
+let doVerify = async (page, io, proxy, user, sms) => {
   if (proxy && proxy.user && proxy.pass) {
     console.log("authenticating proxy user/pass");
     await page.authenticate({
@@ -85,7 +83,6 @@ let doVerify = async (io, proxy, user, sms) => {
   await page.waitForSelector(email);
 
   console.log("input email: " + user.email);
-  await page.click(email);
   await page.type(email, user.email);
 
   console.log("input password: " + user.password);
@@ -93,28 +90,50 @@ let doVerify = async (io, proxy, user, sms) => {
 
   await page.click(loginSubmitBtn);
 
-  await new Promise(async function(resolve, reject) {
-    try {
-      const selectorPromise = page
-        .waitForSelector("div.root-controller>div.js-modal.modal", {
-          hidden: true,
-          timeout: 10000
-        })
-        .catch(reject);
+  await page.waitFor(8000);
 
-      await selectorPromise.then(resolve);
-    } catch (err) {
-      reject(err);
+  const submitError = await page.evaluate(() =>
+    document.querySelector(
+      "form.nike-unite-loginForm div.nike-unite-error-message"
+    )
+      ? document.querySelector(
+          "form.nike-unite-loginForm div.nike-unite-error-message"
+        ).innerHTML
+      : null
+  );
 
-      io.sockets.emit("VerifyLog", {
-        index: user.tableIndex,
-        code: 3,
-        message: "Email/pwd mismatch"
-      });
-      browser.close();
-      return;
-    }
-  });
+  if (submitError) {
+    console.log(submitError);
+    io.sockets.emit("VerifyLog", {
+      index: user.tableIndex,
+      code: 3,
+      message: "Email/pwd mismatch"
+    });
+    return;
+  }
+
+  // await new Promise(async function(resolve, reject) {
+  //   try {
+  //     const selectorPromise = page
+  //       .waitForSelector("div.root-controller>div.js-modal.modal", {
+  //         hidden: true,
+  //         timeout: 10000
+  //       })
+  //       .catch(reject);
+
+  //     await selectorPromise.then(resolve);
+  //   } catch (err) {
+  //     reject(err);
+
+  //     io.sockets.emit("VerifyLog", {
+  //       index: user.tableIndex,
+  //       code: 3,
+  //       message: "Email/pwd mismatch"
+  //     });
+  //     browser.close();
+  //     return;
+  //   }
+  // });
 
   console.log("login credential submitted");
 
@@ -129,12 +148,10 @@ let doVerify = async (io, proxy, user, sms) => {
     visible: true
   });
   await page.click("ul.right-nav li[data-qa=UserMenu] button");
-  await sleep(500);
+  await sleep(1500);
   await page.click(
-    "ul.right-nav li[data-qa=UserMenu] ul.dropdown-list-container li:first-child"
+    "ul.right-nav li[data-qa=UserMenu] ul.dropdown-list-container li:first-child>a"
   );
-
-  await page.waitFor(10000);
 
   io.sockets.emit("VerifyLog", {
     index: user.tableIndex,
@@ -142,6 +159,11 @@ let doVerify = async (io, proxy, user, sms) => {
     message: "Open settings"
   });
 
+  await page.waitFor(10000);
+
+  console.log("Settings page opened ...");
+
+  await page.waitFor(naviToMobileBtn);
   await page.click(naviToMobileBtn);
   console.log("Mobile phone dialog opened ...");
 
@@ -171,16 +193,20 @@ let doVerify = async (io, proxy, user, sms) => {
 
     if (info.includes("balance")) {
       console.log("LOW BALANCE: Add money to your getsmscode account. ");
-      browser.close();
-      process.exit();
+      io.sockets.emit("VerifyLog", {
+        index: user.tableIndex,
+        code: 3,
+        message: "Low Balance on SMS Provider"
+      });
+      return;
     }
 
     phoneNum = info.toString().slice(country === "gb" ? 2 : 1);
 
     console.log("Phone number: " + phoneNum);
 
-    console.log("waiting 5s");
-    await page.waitFor(5000);
+    console.log("waiting 2s");
+    await page.waitFor(2000);
     console.log("waiting done");
 
     await page.screenshot({ path: "screenshot.png" });
@@ -235,11 +261,16 @@ let doVerify = async (io, proxy, user, sms) => {
 
     themessage = null;
     console.log("Getting Text Message: 30s wait");
-    await sleep(30000);
+    await sleep(15000);
 
     if (themessage === null) {
-      await sleep(10000);
-      if (themessage === null) await sleep(5000);
+      await sleep(15000);
+      if (themessage === null) {
+        await sleep(10000);
+        if (themessage === null) {
+          await sleep(10000);
+        }
+      }
     }
 
     if (themessage.includes("Nike")) {
@@ -284,7 +315,6 @@ let doVerify = async (io, proxy, user, sms) => {
     await sleep(1000);
   } catch (error) {
     console.error(error);
-    browser.close();
 
     io.sockets.emit("VerifyLog", {
       index: user.tableIndex,
@@ -301,8 +331,6 @@ let doVerify = async (io, proxy, user, sms) => {
     code: 6,
     message: "Accont verified"
   });
-
-  browser.close();
 };
 
 module.exports = {

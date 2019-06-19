@@ -99,7 +99,7 @@
 
         <div class="flex-1 px-4 py-2 m-2">
           <nike-select
-            :options="smsProvider"
+            :options="smsProviderList"
             :placeholder="'Sms Provider'"
             :selected="defaultSettings.discord"
             v-on:updateOption="onCountrySelect"
@@ -125,7 +125,7 @@
 
         <div class="flex-1 px-4 py-2 m-2">
           <nike-select
-            :options="smsCountry"
+            :options="smsCountryList"
             :placeholder="'Service Country'"
             :selected="defaultSettings.discord"
             v-on:updateOption="onCountrySelect"
@@ -149,6 +149,7 @@ export default {
   name: "home",
   data() {
     return {
+      settings: this.$store.getters.accountSettings,
       proxyGroup: [
         { name: "Group 1" },
         { name: "Group 2" },
@@ -163,13 +164,24 @@ export default {
         { name: "5" },
         { name: "6" }
       ],
-      smsCountry: [{ name: "Russia" }, { name: "China" }],
-      smsProvider: [{ name: "getsmscode" }, { name: "simsms" }],
+      smsCountryList: [
+        {
+          getsmscode: [{ name: "US" }, { name: "UK" }, { name: "CN" }],
+          pvacodes: [{ name: "US" }, { name: "UK" }, { name: "CN" }],
+          smspva: [{ name: "UK" }],
+          smsaccs: [{ name: "US" }, { name: "UK" }]
+        }
+      ],
+      smsProviderList: [
+        { name: "getsmscode" },
+        { name: "smspva" },
+        { name: "pvacodes" },
+        { name: "smsaccs" }
+      ],
       errors: [],
       defaultSettings: {
         discord: ""
       },
-      settings: {},
       defaultSelectOptions: []
     };
   },

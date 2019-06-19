@@ -6,10 +6,10 @@ Vue.use(Vuex);
 export default new Vuex.Store({
   state: {
     accountSettings: {
-      firstName: "Asley",
-      lastName: "Kingstar",
+      firstName: "Garry",
+      lastName: "Balack",
       emailDomain: "@gmail.com",
-      emailTemplate: "cto.sporting2019@gmail.com",
+      emailTemplate: "garry.balack2019@gmail.com",
       accountQuantity: 1,
       birthdate: "12/03/1986",
       password: "@tSt!~3ad#a",
@@ -19,8 +19,8 @@ export default new Vuex.Store({
       generatorType: null
     },
 
-    generalSettings: {
-      sms: {
+    profileSettings: {
+      smsLogin: {
         getsmscode: {
           email: "jerkinly@gmail.com",
           token: "e5ff73708747af0bb5bcb7984266d9e1"
@@ -28,29 +28,34 @@ export default new Vuex.Store({
       }
     },
 
+    defaultSettings: {},
+
     // This is data for 'Account Log' page, and is going to be created.
     pendingList: [],
 
     // This is data for 'Verify Log' page, and is going to be verified.
     createdList: [
-      {
-        country: "United Kingdom",
-        number: "###########",
-        account_email: "garry.lampard+lzhb2q@gmail.com",
-        password: "@tSt!~3ad#a",
-        status: {
-          code: 0,
-          message: "Idle"
-        }
-      }
+      // {
+      //   country: "United Kingdom",
+      //   number: "###########",
+      //   account_email: "garry.lampard+lzhb2q@gmail.com",
+      //   password: "@tSt!~3ad#a",
+      //   status: {
+      //     code: 0,
+      //     message: "Idle"
+      //   }
+      // }
     ]
   },
   getters: {
     accountSettings: state => {
       return state.accountSettings;
     },
-    generalSettings: state => {
-      return state.generalSettings;
+    profileSettings: state => {
+      return state.profileSettings;
+    },
+    defaultSettings: state => {
+      return state.defaultSettings;
     },
     pendingList: state => {
       return state.pendingList;
@@ -62,6 +67,12 @@ export default new Vuex.Store({
   mutations: {
     SET_ACCOUNT_SETTINGS: (state, payload) => {
       state.accountSettings = payload;
+    },
+    SET_DEFAULT_SETTINGS: (state, payload) => {
+      state.defaultSettings = payload;
+    },
+    SET_PROFILE_SETTINGS: (state, payload) => {
+      state.profileSettings = payload;
     },
     ADD_ACCOUNT_SETTINGS: (state, payload) => {
       state.accountSettings.push(payload);
@@ -83,6 +94,24 @@ export default new Vuex.Store({
       );
 
       console.log(state.createdList);
+    },
+    ADD_TO_CREATED_LIST: (state, data) => {
+      console.log("committing ADD_TO_CREATED_LIST");
+      for (var i = 0; i < state.createdList.length; i++) {
+        if (state.createdList[i].account_email === data.email) break;
+      }
+      if (i === state.createdList.length) {
+        state.createdList.push({
+          country: data.country,
+          number: data.number,
+          account_email: data.email,
+          password: data.password,
+          status: {
+            code: 0,
+            message: "Idle"
+          }
+        });
+      }
     }
   }
 });

@@ -1,14 +1,16 @@
-(function() {
+(async function() {
   "use strict";
 
-  var express = require("express");
-  var path = require("path");
-  var logger = require("morgan");
-  var bodyParser = require("body-parser");
+  const express = require("express");
+  const logger = require("morgan");
+  const bodyParser = require("body-parser");
   const cors = require("cors");
-  var createAccountBot = require("./crawler/create-bot");
-  var verifyAccountBot = require("./crawler/verify-bot");
-  var chineseAccountBot = require("./crawler/chinese-bot");
+  const { Cluster } = require("puppeteer-cluster");
+  const config = require("./crawler/config");
+
+  const createAccountBot = require("./crawler/create-bot");
+  const verifyAccountBot = require("./crawler/verify-bot");
+  const chineseAccountBot = require("./crawler/chinese-bot");
 
   const socketIo = require("socket.io");
   const PORT = 5000;
@@ -20,6 +22,19 @@
     path: "/mypath",
     serveClient: false
   });
+
+  // const fs = require("fs");
+  // const writeStream = fs.createWriteStream("./test.log", {
+  //   encoding: "utf8",
+  //   flags: "w"
+  // });
+
+  // process.stdout = require("stream").Writable();
+  // process.stdout._write = function(chunk, encoding, callback) {
+  //   writeStream.write(chunk, encoding, callback);
+  // };
+
+  console.log("test from console.log");
 
   server.listen(PORT, () => {
     console.log("Listening on *:" + PORT);
@@ -57,21 +72,52 @@
 
   app.use(cors(corsOptions));
 
+  // Puppeteer Cluster
+  const cluster = await Cluster.launch({
+    concurrency: Cluster.CONCURRENCY_CONTEXT,
+    maxConcurrency: 2,
+    timeout: 160000,
+    puppeteerOptions: {
+      // headless: false,
+      // slowMo: 100,
+      headless: true,
+      args: ["--fast-start", "--disable-extensions", "--no-sandbox"],
+      ignoreHTTPSErrors: true,
+      executablePath:
+        process.env.NODE_ENV === "production"
+          ? "./chrome-win/chrome.exe"
+          : "./node_modules/puppeteer/.local-chromium/win64-662092/chrome-win/chrome.exe"
+    }
+  });
+
+  await cluster.task(async ({ page, data: pack }) => {
+    var proxy = pack.body.proxy;
+    var user = pack.body.user;
+    var sms = pack.body.sms;
+
+    if (pack.mode === "create") {
+      if (user.country === "China")
+        await chineseAccountBot.doCreate(page, io, proxy, user, sms);
+      else await createAccountBot.doCreate(page, io, proxy, user);
+    } else if (pack.mode === "verify") {
+      await verifyAccountBot.doVerify(page, io, proxy, user, sms);
+    }
+  });
+
   // Back end point for creating accounts
   app.post("/create", function(req, res) {
-    var proxy = req.body.proxy;
-    var user = req.body.user;
-    var sms = req.body.sms;
-
     if (clientList && clientList.length) {
-      if (user.country === "China")
-        chineseAccountBot.doCreate(io, proxy, user, sms);
-      else createAccountBot.doCreate(io, proxy, user);
+      try {
+        cluster.execute({
+          body: req.body,
+          mode: "create"
+        });
+      } catch (err) {
+        res.end("Error: " + err.message);
+      }
 
       res.json({
         status: true,
-        proxy: proxy,
-        user: user,
         message: "Create account requested"
       });
     } else {
@@ -84,17 +130,18 @@
 
   // Back end point for verifying accounts
   app.post("/verify", function(req, res) {
-    var proxy = req.body.proxy;
-    var user = req.body.user;
-    var sms = req.body.sms;
-
     if (clientList && clientList.length) {
-      verifyAccountBot.doVerify(io, proxy, user, sms);
+      try {
+        cluster.execute({
+          body: req.body,
+          mode: "verify"
+        });
+      } catch (err) {
+        res.end("Error: " + err.message);
+      }
+
       res.json({
         status: true,
-        proxy: proxy,
-        user: user,
-        sms: sms,
         message: "Verify account requested"
       });
     } else {

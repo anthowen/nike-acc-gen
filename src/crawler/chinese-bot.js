@@ -1,6 +1,5 @@
 const request = require("request");
 const fs = require("fs");
-const config = require("./config");
 
 var info;
 var themessage;
@@ -60,11 +59,7 @@ function callbacktwo(error, response, body) {
   }
 }
 
-console.log("The Bot is starting...");
-
-let doCreate = async (io, proxy, user, sms) => {
-  var browser = await config.browser(proxy);
-  var page = await browser.newPage();
+let doCreate = async (page, io, proxy, user, sms) => {
   if (proxy && proxy.user && proxy.pass) {
     console.log("authenticating proxy user/pass");
     await page.authenticate({
@@ -73,17 +68,20 @@ let doCreate = async (io, proxy, user, sms) => {
     });
   }
 
-  await page.setViewport({ width: 1200, height: 800 });
+  console.log("The chinese bot is starting...");
+  await page
+    .setViewport({ width: 1200, height: 800 })
+    .catch(error => console.log("viewport error: " + error.message));
 
-  await Promise.all([
-    page.waitForNavigation(5000), // The promise resolves after navigation has finished
-    await page.goto("https://www.nike.com/cn/launch/")
-  ]);
+  console.log("navigating to launch page");
+  // The promise resolves after navigation has finished
+  await page.goto("https://www.nike.com/cn/launch/");
 
+  console.log("navigated to launch page");
   //await page.click(AcceptCookies);
   //console.log("Accepted Cookies...");
 
-  // await page.waitFor(1000);
+  await page.waitFor(1000);
 
   await page.click(loginBtn);
   console.log("Login Button Clicked...");
@@ -118,8 +116,20 @@ let doCreate = async (io, proxy, user, sms) => {
 
     if (info.includes("balance")) {
       console.log("LOW BALANCE: Add money to your getsmscode account. ");
-      browser.close();
-      process.exit();
+      io.sockets.emit("CreateLog", {
+        index: user.tableIndex,
+        code: 3,
+        message: "Low Balance on SMS Provider"
+      });
+      return;
+    } else if (info.includes("Issue")) {
+      console.log(info);
+      io.sockets.emit("CreateLog", {
+        index: user.tableIndex,
+        code: 3,
+        message: "Trying agin to get phone number"
+      });
+      await sleep(10000);
     }
 
     phoneNum = info.toString().slice(2);
@@ -195,7 +205,6 @@ let doCreate = async (io, proxy, user, sms) => {
       });
     } else {
       console.log("failed to get sms from getsmscode.com");
-      browser.close();
       io.sockets.emit("CreateLog", {
         index: user.tableIndex,
         code: 3,
@@ -207,7 +216,6 @@ let doCreate = async (io, proxy, user, sms) => {
     await sleep(1000);
   } catch (error) {
     console.error(error);
-    browser.close();
     // process.exit();
 
     io.sockets.emit("CreateLog", {
@@ -228,9 +236,12 @@ let doCreate = async (io, proxy, user, sms) => {
     message: "SMS code success"
   });
 
-  await page.type(sName, user.firstName);
-  await page.type(fName, user.lastName);
+  await page.type(fName, user.firstName);
+  await sleep(500);
+  await page.type(sName, user.lastName);
+  await sleep(500);
   await page.type(password, user.password);
+  await sleep(500);
   await page.click(gender);
 
   await page.click(submit);
@@ -249,29 +260,34 @@ let doCreate = async (io, proxy, user, sms) => {
   console.log("email: " + user.email);
   await page.type(email, user.email);
 
-  page.on("dialog", async dialog => {
-    console.log(dialog.message());
-    await dialog.dismiss();
-    await browser.close();
-  });
-
   io.sockets.emit("CreateLog", {
     index: user.tableIndex,
     code: 5,
-    message: "Enter Email"
+    message: "Filling email"
   });
 
   await page.click(submitEmail);
   console.log("submit email");
 
+  page.on("dialog", async dialog => {
+    console.log(dialog.message());
+    await dialog.dismiss();
+  });
+
   console.log("waiting 8s");
   await sleep(8000);
   console.log("waiting done");
 
-  await page.type(
-    dob,
-    "01/02/19" + Math.floor(Math.random() * (99 - 55) + 55).toString()
-  );
+  await page.waitFor(dob, 3000);
+  await page
+    .type(
+      dob,
+      "01/02/19" + Math.floor(Math.random() * (99 - 55) + 55).toString()
+    )
+    .catch(err => {
+      console.log("Email duplicates");
+      console.log(err);
+    });
 
   console.log("Fill Date of birth");
 
@@ -287,16 +303,14 @@ let doCreate = async (io, proxy, user, sms) => {
     message: "Account created & verified"
   });
 
-  fs.appendFile("Accounts.txt", "\n" + userpass, err => {
+  fs.appendFile("VerifiedAccounts.txt", "\n" + userpass, err => {
     if (err) throw err;
-    console.log("Added User/Pass To Accounts.txt!");
+    console.log("Added User/Pass To VerifiedAccounts.txt!");
   });
 
   console.log("waiting for 8s");
   await sleep(8000);
   console.log("waiting done");
-
-  browser.close();
 };
 
 module.exports = {

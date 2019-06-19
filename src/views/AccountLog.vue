@@ -51,6 +51,9 @@ export default {
         };
         if (data.message.includes("phonenumber"))
           this.tableData[data.index].number = data.phonenumber;
+        if (data.code === 6 && !data.message.includes("verified")) {
+          this.$store.commit("ADD_TO_CREATED_LIST", this.tableData[data.index]);
+        }
       }
     });
   },
