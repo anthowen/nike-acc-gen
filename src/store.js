@@ -19,19 +19,51 @@ export default new Vuex.Store({
       generatorType: null
     },
 
+    profileList: [
+      // {
+      //   name: "John",
+      //   details: {
+      //     token: "",
+      //     username: ""
+      //     ...
+      //   }
+      // }
+    ],
+
+    accountProfiles: {},
+
     profileSettings: {
-      smsLogin: {
-        getsmscode: {
-          email: "jerkinly@gmail.com",
-          token: "e5ff73708747af0bb5bcb7984266d9e1"
-        }
-      }
+      provider: "",
+      country: "",
+      tier: "",
+      username: "",
+      token: "",
+      name: "",
+      profile: ""
     },
 
-    defaultSettings: {},
+    defaultSettings: {
+      discordWebhook: "",
+      typingSpeed: 3,
+      threadCount: 2,
+      automationDelay: 10,
+      attemptCount: 0,
+      proxyGroup: ""
+    },
 
     // This is data for 'Account Log' page, and is going to be created.
     pendingList: [],
+
+    proxyList: [
+      {
+        host: "",
+        port: "",
+        username: "",
+        password: "",
+        status: "",
+        group: ""
+      }
+    ],
 
     // This is data for 'Verify Log' page, and is going to be verified.
     createdList: [
@@ -60,19 +92,22 @@ export default new Vuex.Store({
     pendingList: state => {
       return state.pendingList;
     },
+    profileList: state => {
+      return state.profileList;
+    },
     createdList: state => {
       return state.createdList;
     }
   },
   mutations: {
     SET_ACCOUNT_SETTINGS: (state, payload) => {
-      state.accountSettings = payload;
+      state.accountSettings = Vue._.cloneDeep(payload);
     },
     SET_DEFAULT_SETTINGS: (state, payload) => {
-      state.defaultSettings = payload;
+      state.defaultSettings = Vue._.cloneDeep(payload);
     },
     SET_PROFILE_SETTINGS: (state, payload) => {
-      state.profileSettings = payload;
+      state.profileSettings = Vue._.cloneDeep(payload);
     },
     ADD_ACCOUNT_SETTINGS: (state, payload) => {
       state.accountSettings.push(payload);
@@ -112,6 +147,67 @@ export default new Vuex.Store({
           }
         });
       }
+    },
+
+    // From Settings page, add current edit to ProfileList
+    ADD_TO_PROFILE_LIST: (state, profile) => {
+      if (!profile || !profile.name) {
+        alert("No profile selected");
+        return;
+      }
+      let existed = false;
+      if (profile.name in state.accountProfiles) {
+        existed = true;
+      }
+      state.accountProfiles[profile.name] = Vue._.cloneDeep(profile);
+      delete state.accountProfiles[profile.name].profile;
+
+      if (!existed) state.profileList.push({ name: profile.name });
+    },
+
+    //
+    LOAD_PROFILE: (state, profile) => {
+      if (!profile || !(profile.name in state.accountProfiles)) {
+        alert("Selected profile does not exist");
+        return;
+      }
+      console.log("Load profile: " + profile.name);
+      state.profileSettings = Vue._.cloneDeep(
+        state.accountProfiles[profile.name]
+      );
+      state.profileSettings.profile = profile;
+    },
+
+    // From Settings page, remove current edit from ProfileList
+    REMOVE_FROM_PROFILE_LIST: (state, profile) => {
+      if (!profile || !profile.name) {
+        alert("No profile selected");
+        return;
+      }
+      if (!(profile.name in state.accountProfiles)) {
+        alert("Selected profile does not exist");
+        return;
+      }
+
+      state.accountProfiles = Vue._.omit(state.accountProfiles, profile.name);
+      const index = state.profileList.findIndex(pp => pp.name === profile.name);
+      state.profileList = state.profileList.splice(index, 1);
+
+      if (index >= state.profileList.length) {
+        state.profileSettings = Vue._.cloneDeep(
+          state.accountProfiles[state.profileList.slice(-1).pop()]
+        );
+      } else if (index >= 0) {
+        state.profileSettings = Vue._.cloneDeep(
+          state.accountProfiles[state.profileList[index]]
+        );
+      }
+    },
+
+    UpdateProfileList(state) {
+      state.profileList = [];
+      for (let key in state.accountProfiles)
+        state.profileList.push({ name: key });
     }
   }
 });

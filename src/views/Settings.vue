@@ -82,17 +82,19 @@
             class="border border-nike-border bg-nike-darkest rounded-lg h-10 w-full py-2 px-3 text-grey m-3"
             type="text"
             placeholder="Profile Name"
+            v-model="profileSettings.name"
           >
           <input
             class="border border-nike-border bg-nike-darkest rounded-lg h-10 w-full py-2 px-3 text-grey m-3"
             type="text"
             placeholder="Token"
+            v-model="profileSettings.token"
           >
           <nike-select
-            :options="proxyGroup"
+            :options="profileList"
             :placeholder="'Load Profile'"
-            :selected="defaultSettings.discord"
-            v-on:updateOption="onCountrySelect"
+            :selected="profileSettings.profile"
+            v-on:updateOption="onProfileSelect"
             class="m-3 w-full"
           ></nike-select>
         </div>
@@ -101,8 +103,8 @@
           <nike-select
             :options="smsProviderList"
             :placeholder="'Sms Provider'"
-            :selected="defaultSettings.discord"
-            v-on:updateOption="onCountrySelect"
+            :selected="profileSettings.provider"
+            v-on:updateOption="onSmsProviderSelect"
             class="m-3 w-full"
           ></nike-select>
           <input
@@ -110,6 +112,7 @@
             id="providerUsername"
             type="text"
             placeholder="Username"
+            v-model="profileSettings.username"
           >
           <div class="flex justify-center m-3">
             <button
@@ -127,7 +130,7 @@
           <nike-select
             :options="smsCountryList"
             :placeholder="'Service Country'"
-            :selected="defaultSettings.discord"
+            :selected="profileSettings.country"
             v-on:updateOption="onCountrySelect"
             class="m-3 w-full"
           ></nike-select>
@@ -136,6 +139,7 @@
             id="smsTier"
             type="text"
             placeholder="Tier (Cloud sms)"
+            v-model="profileSettings.tier"
           >
         </div>
       </div>
@@ -147,9 +151,19 @@ import NikeSelect from "../components/NikeSelect.vue";
 
 export default {
   name: "home",
+  mounted() {
+    this.$nextTick(function() {
+      this.settings = this.$store.getters.accountSettings;
+      this.profileSettings = this.$store.getters.profileSettings;
+      this.profileList = this.$store.getters.profileList;
+      console.log("Settings page : After did mount");
+    });
+  },
   data() {
     return {
+      profileSettings: this.$store.getters.profileSettings,
       settings: this.$store.getters.accountSettings,
+      profileList: this.$store.getters.profileList,
       proxyGroup: [
         { name: "Group 1" },
         { name: "Group 2" },
@@ -164,14 +178,12 @@ export default {
         { name: "5" },
         { name: "6" }
       ],
-      smsCountryList: [
-        {
-          getsmscode: [{ name: "US" }, { name: "UK" }, { name: "CN" }],
-          pvacodes: [{ name: "US" }, { name: "UK" }, { name: "CN" }],
-          smspva: [{ name: "UK" }],
-          smsaccs: [{ name: "US" }, { name: "UK" }]
-        }
-      ],
+      availableSmsCountryList: {
+        getsmscode: [{ name: "US" }, { name: "UK" }, { name: "CN" }],
+        pvacodes: [{ name: "US" }, { name: "UK" }, { name: "CN" }],
+        smspva: [{ name: "UK" }],
+        smsaccs: [{ name: "US" }, { name: "UK" }]
+      },
       smsProviderList: [
         { name: "getsmscode" },
         { name: "smspva" },
@@ -185,18 +197,30 @@ export default {
       defaultSelectOptions: []
     };
   },
-  mounted() {
-    this.$nextTick(function() {
-      // this.settings = this.$store.getters.accountSettings;
-      console.log("after did mount");
-    });
+  computed: {
+    smsCountryList() {
+      if (!this.profileSettings.provider) return [];
+      return this.availableSmsCountryList[this.profileSettings.provider.name];
+    }
   },
   components: {
     NikeSelect
   },
   methods: {
     onCountrySelect(payload) {
-      console.log(payload);
+      this.profileSettings.country = payload;
+    },
+
+    onSmsProviderSelect(payload) {
+      this.profileSettings.provider = payload;
+      this.profileSettings.country = null;
+    },
+
+    onProfileSelect(payload) {
+      this.$store.commit("LOAD_PROFILE", payload);
+      this.profileSettings = this.$store.getters.profileSettings;
+      // this.$set(this, this.profileSettings, this.$store.getters.profileSettings);
+      console.log(this.profileSettings);
     },
 
     isEmptyString(str) {
@@ -238,8 +262,15 @@ export default {
     testDiscordWebhook() {},
     saveDefaultSettings() {},
     resetDefaultSettings() {},
-    saveProfileSettings() {},
-    deleteProfileSettings() {}
+    saveProfileSettings() {
+      this.$store.commit("ADD_TO_PROFILE_LIST", this.profileSettings);
+    },
+    deleteProfileSettings() {
+      this.$store.commit(
+        "REMOVE_FROM_PROFILE_LIST",
+        this.profileSettings.profile
+      );
+    }
   }
 };
 </script>

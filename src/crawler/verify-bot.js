@@ -168,7 +168,7 @@ let doVerify = async (page, io, proxy, user, sms) => {
   console.log("Mobile phone dialog opened ...");
 
   //values for phone number request
-  let params = "?username=" + sms.email + "&token=" + sms.token + "&action=";
+  let params = "?username=" + sms.username + "&token=" + sms.token + "&action=";
 
   let hostUrl =
     "http://www.getsmscode.com/usdo.php" + params + "getmobile" + "&pid=628";

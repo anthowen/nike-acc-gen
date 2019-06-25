@@ -102,7 +102,7 @@ let doCreate = async (page, io, proxy, user, sms) => {
     const options = {
       url:
         "http://www.getsmscode.com/do.php?action=getmobile&username=" +
-        sms.email +
+        sms.username +
         "&token=" +
         sms.token +
         "&pid=628",
@@ -119,7 +119,7 @@ let doCreate = async (page, io, proxy, user, sms) => {
       io.sockets.emit("CreateLog", {
         index: user.tableIndex,
         code: 3,
-        message: "Low Balance on SMS Provider"
+        message: "Low Balance"
       });
       return;
     } else if (info.includes("Issue")) {
@@ -172,7 +172,7 @@ let doCreate = async (page, io, proxy, user, sms) => {
     const values = {
       url:
         "http://www.getsmscode.com/do.php?action=getsms&username=" +
-        sms.email +
+        sms.username +
         "&token=" +
         sms.token +
         "&pid=628&mobile=86" +

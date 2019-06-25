@@ -33,6 +33,14 @@ export default {
       selectedItem: null
     };
   },
+  watch: {
+    // eslint-disable-next-line no-unused-vars
+    selected: function(newVal, oldVal) {
+      // watch it
+      console.log("Selected Props changed externally");
+      this.selectedOption = newVal;
+    }
+  },
   created() {
     this.selectedOption = this.selected;
     document.body.addEventListener("click", this.close);

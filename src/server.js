@@ -3,6 +3,7 @@
 
   const express = require("express");
   const logger = require("morgan");
+  const request = require("request");
   const bodyParser = require("body-parser");
   const cors = require("cors");
   const { Cluster } = require("puppeteer-cluster");
@@ -33,8 +34,6 @@
   // process.stdout._write = function(chunk, encoding, callback) {
   //   writeStream.write(chunk, encoding, callback);
   // };
-
-  console.log("test from console.log");
 
   server.listen(PORT, () => {
     console.log("Listening on *:" + PORT);
@@ -143,6 +142,55 @@
       res.json({
         status: true,
         message: "Verify account requested"
+      });
+    } else {
+      res.json({
+        status: false,
+        message: "no socket has connected"
+      });
+    }
+  });
+
+  app.post("/test-proxy", (req, res) => {
+    var proxy = req.body.proxy;
+    var tableIndex = req.body.tableIndex;
+    var proxyUrl =
+      "http://" +
+      proxy.username +
+      ":" +
+      proxy.password +
+      "@" +
+      proxy.host +
+      ":" +
+      proxy.port;
+
+    if (clientList && clientList.length) {
+      var proxiedRequest = request.defaults({ proxy: proxyUrl });
+
+      console.log("Test Proxy: " + proxyUrl);
+      proxiedRequest.get("https://www.nike.com", function(err, resp, body) {
+        if (resp && (resp.statusCode === 200 || resp.statusCode === 403 )) {
+          io.sockets.emit("ProxyStatus", {
+            index: tableIndex,
+            code: 6,
+            message: "Good"
+          });
+        } else {
+          io.sockets.emit("ProxyStatus", {
+            index: tableIndex,
+            code: 3,
+            message: "Bad"
+          });
+        }
+
+        console.log("Error: ");
+        console.log(err);
+        console.log("Reponse code: ");
+        console.log(resp && resp.statusCode);
+      });
+      res.json({
+        status: true,
+        message: "Test Proxy requested"
       });
     } else {
       res.json({

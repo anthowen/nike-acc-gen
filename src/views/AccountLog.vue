@@ -101,7 +101,11 @@ export default {
         message: "Create account started"
       });
 
-      const generalSettings = this.$store.getters.generalSettings;
+      const profileSettings = this.$store.getters.profileSettings;
+      if (!profileSettings.profile || !profileSettings.profile.name) {
+        alert("Please select proper profile on Settings");
+        return;
+      }
       // a concurrency parameter of 1 makes all api requests secuential
       const MAX_SIMULTANEOUS_DOWNLOADS = 2;
       // init your manager.
@@ -124,7 +128,11 @@ export default {
               firstName: item.first_name,
               lastName: item.last_name
             },
-            generalSettings.sms["getsmscode"]
+            {
+              provider: profileSettings.provider.name,
+              username: profileSettings.username,
+              token: profileSettings.token
+            }
           );
         })
       ).then(responses => {
@@ -134,12 +142,6 @@ export default {
 
       console.log(queue);
       console.log(results);
-
-      // var smsEmail = "ENTER GETSMSCODE.COM EMAIL ADDRESS";
-      // var token = "ENTER GETSMSCODE API TOKEN";
-      // var proxyUrl = ""; //if proxy exists enter it in format IP:PORT, if not leave blank
-      // var proxyUser = ""; //If proxy name/pass exists insert it here if not leave both variables blank
-      // var proxyPass = "";
     },
     async stopCreatingAccount() {}
   }
