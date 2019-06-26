@@ -1,9 +1,5 @@
-const request = require("request");
 const fs = require("fs");
 
-var info;
-var themessage;
-var phoneNum;
 var userpass;
 
 //GET DOM TRAVERSAL VALUES
@@ -39,33 +35,30 @@ const email = 'input[type="email"]';
 const submitEmail = 'input[type="button"]';
 
 //Create Sleep function to use in Async/Await function
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-//callback for phone number request
-function callback(error, response, body) {
-  if (!error && response.statusCode == 200) {
-    info = body;
-    console.log("Phone Number: " + info);
-  } else console.log("Reponse.statuscode = " + response.statusCode);
-}
-
-//callback for text message response
-function callbacktwo(error, response, body) {
-  if (!error && response.statusCode == 200) {
-    themessage = body;
-    console.log("Message: " + themessage);
-  }
-}
-
-let doCreate = async (page, io, proxy, user, sms) => {
+const doCreate = async (page, io, proxy, user, sms) => {
   if (proxy && proxy.user && proxy.pass) {
     console.log("authenticating proxy user/pass");
     await page.authenticate({
       username: proxy.user,
       password: proxy.pass
     });
+  }
+
+  console.log("selected sms provider : " + sms.provider);
+  let smsProvider = null;
+  if (sms.provider === "pvacodes")
+    smsProvider = require("./sms-providers/pvacodes");
+  else if (sms.provider === "getsmscode")
+    smsProvider = require("./sms-providers/getsmscode");
+  if (!smsProvider) {
+    io.sockets.emit("CreateLog", {
+      index: user.tableIndex,
+      code: 3,
+      message: "Unsupported SMS Service"
+    });
+    return;
   }
 
   console.log("The chinese bot is starting...");
@@ -98,100 +91,48 @@ let doCreate = async (page, io, proxy, user, sms) => {
   await page.waitFor(2000);
 
   try {
-    //values for phone number request
-    const options = {
-      url:
-        "http://www.getsmscode.com/do.php?action=getmobile&username=" +
-        sms.username +
-        "&token=" +
-        sms.token +
-        "&pid=628",
-      headers: { "User-Agent": "request" }
+    // eslint-disable-next-line no-unused-vars
+    const balanceCallback = balance => {};
+    const errorCallback = errorMessage => {
+      throw new Error(errorMessage);
     };
 
-    console.log("url = " + options.url);
+    const numberCallback = async phoneNum => {
+      console.log("Phone number: " + phoneNum);
+      console.log("waiting 5s");
+      await page.waitFor(5000);
+      console.log("waiting done");
+      await page.screenshot({ path: "screenshot.png" });
+      await page.click(phone);
+      await page.type(phone, phoneNum);
+      console.log("entered phone number");
 
-    request(options, callback);
-    await sleep(10000);
-
-    if (info.includes("balance")) {
-      console.log("LOW BALANCE: Add money to your getsmscode account. ");
       io.sockets.emit("CreateLog", {
         index: user.tableIndex,
-        code: 3,
-        message: "Low Balance"
+        code: 1,
+        message: "Enter phonenumber",
+        phonenumber: "+86 " + phoneNum
       });
-      return;
-    } else if (info.includes("Issue")) {
-      console.log(info);
+
+      console.log("waiting 2s");
+      await page.waitFor(2000);
+      console.log("waiting done");
+
+      await page.click(sendNum);
+      console.log("pressed send number button");
+
       io.sockets.emit("CreateLog", {
         index: user.tableIndex,
-        code: 3,
-        message: "Trying agin to get phone number"
+        code: 1,
+        message: "SMS Sent"
       });
-      await sleep(10000);
-    }
-
-    phoneNum = info.toString().slice(2);
-
-    console.log("Phone number: " + phoneNum);
-
-    console.log("waiting 5s");
-    await page.waitFor(5000);
-    console.log("waiting done");
-    await page.screenshot({ path: "screenshot.png" });
-    await page.click(phone);
-    await page.type(phone, phoneNum);
-    console.log("entered phone number");
-
-    io.sockets.emit("CreateLog", {
-      index: user.tableIndex,
-      code: 1,
-      message: "Enter phonenumber",
-      phonenumber: "+86 " + phoneNum
-    });
-
-    console.log("waiting 2s");
-    await page.waitFor(2000);
-    console.log("waiting done");
-
-    await page.click(sendNum);
-    console.log("pressed send number button");
-
-    io.sockets.emit("CreateLog", {
-      index: user.tableIndex,
-      code: 1,
-      message: "Send SMS"
-    });
-
-    console.log("Getting Text Message: 30s wait");
-    await sleep(30000);
-
-    console.log("Phone Number: 86" + phoneNum);
-
-    const values = {
-      url:
-        "http://www.getsmscode.com/do.php?action=getsms&username=" +
-        sms.username +
-        "&token=" +
-        sms.token +
-        "&pid=628&mobile=86" +
-        phoneNum,
-      headers: { "User-Agent": "request" }
     };
 
-    await request(values, callbacktwo);
-
-    await sleep(1500);
-
-    if (themessage.includes("NIKE")) {
-      console.log("request complete");
-      var theMessaging = themessage.slice(themessage.length - 6);
-      console.log("Message: " + theMessaging.toString());
-
+    const smsCallback = async code => {
+      console.log("SMS code received : " + code);
       await page.click(enterTheValue);
-      await page.type(enterTheValue, theMessaging);
-      console.log("entered phone message");
+      await page.type(enterTheValue, code);
+      console.log("Entered sms code");
 
       await sleep(500);
 
@@ -203,26 +144,23 @@ let doCreate = async (page, io, proxy, user, sms) => {
         code: 2,
         message: "Enter SMS code"
       });
-    } else {
-      console.log("failed to get sms from getsmscode.com");
+    };
+
+    await smsProvider.doProcess(
+      { country: "CN", token: sms.token, username: sms.username },
+      null,
+      numberCallback,
+      smsCallback,
+      errorCallback
+    );
+  } catch (e) {
+    if (e.message.includes("sms")) {
       io.sockets.emit("CreateLog", {
         index: user.tableIndex,
         code: 3,
         message: "Failed to get SMS"
       });
-      return;
     }
-
-    await sleep(1000);
-  } catch (error) {
-    console.error(error);
-    // process.exit();
-
-    io.sockets.emit("CreateLog", {
-      index: user.tableIndex,
-      code: 3,
-      message: "Failed to get SMS"
-    });
     return;
   }
 

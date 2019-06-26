@@ -182,13 +182,32 @@ export default {
         { name:"Male" },
         { name:"Female" }
       ],
-      countryOptions: [{ name: "United Kingdom" }, { name: "United States" }, { name: "China" }]
+      currentProvider: "",
+      availableSmsCountryList: {
+        getsmscode: [{ name: "United States" }, { name: "United Kingdom" }, { name: "China" }],
+        pvacodes: [{ name: "United States" }, { name: "United Kingdom" }, { name: "China" }],
+        smspva: [{ name: "United Kingdom" }],
+        smsaccs: [{ name: "United States" }, { name: "United Kingdom" }]
+      },
     };
+  },
+  computed: {
+    countryOptions() {
+      if (!this.currentProvider) return [];
+      return this.availableSmsCountryList[this.currentProvider];
+    }
   },
   mounted () {
     this.$nextTick(function () {
       this.settings = this.$store.getters.accountSettings;
       console.log('AccountSettings page : After did mount');
+
+      const profileSettings = this.$store.getters.profileSettings;
+      if (!profileSettings.profile || !profileSettings.profile.name) {
+        alert("Please make sure that you selected correct profile on Settings");
+      }else{
+        this.currentProvider = profileSettings.provider.name;
+      }
     })
   },
   components: {

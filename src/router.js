@@ -9,6 +9,12 @@ export default new Router({
   routes: [
     {
       path: "/",
+      name: "settings",
+      component: () =>
+        import(/* webpackChunkName: "develop" */ "./views/Settings.vue")
+    },
+    {
+      path: "/account-settings",
       name: "account-settings",
       component: () =>
         import(/* webpackChunkName: "create" */ "./views/AccountSettings.vue")
@@ -33,12 +39,6 @@ export default new Router({
       name: "proxies",
       component: () =>
         import(/* webpackChunkName: "play" */ "./views/Proxies.vue")
-    },
-    {
-      path: "/settings",
-      name: "settings",
-      component: () =>
-        import(/* webpackChunkName: "develop" */ "./views/Settings.vue")
     }
     // {
     //   path: "/categories",

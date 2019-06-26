@@ -145,6 +145,7 @@ export default {
       const MAX_CONCURRENT_REQUESTS = 2;
 
       // init your manager.
+      // eslint-disable-next-line no-unused-vars
       const manager = ConcurrencyManager(api, MAX_CONCURRENT_REQUESTS);
 
       // requests will be sent in batches determined by MAX_CONCURRENT_REQUESTS

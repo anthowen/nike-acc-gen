@@ -1,0 +1,6 @@
+>>> Request success from smspva:
+{ response: '1', balance: '4.5000' }
+>>> Request success from smspva:
+Phone number :  7404041534
+Catched SMSPvaError: Unexpected response code
+SMS hasn't found yet

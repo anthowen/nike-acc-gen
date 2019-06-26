@@ -77,15 +77,15 @@
     maxConcurrency: 2,
     timeout: 160000,
     puppeteerOptions: {
-      // headless: false,
-      // slowMo: 100,
-      headless: true,
-      args: ["--fast-start", "--disable-extensions", "--no-sandbox"],
+      headless: false,
+      slowMo: 100,
+      // headless: true,
+      // args: ["--fast-start", "--disable-extensions", "--no-sandbox"],
       ignoreHTTPSErrors: true,
       executablePath:
         process.env.NODE_ENV === "production"
           ? "./chrome-win/chrome.exe"
-          : "./node_modules/puppeteer/.local-chromium/win64-662092/chrome-win/chrome.exe"
+          : "./node_modules/puppeteer/.local-chromium/win64-669486/chrome-win/chrome.exe"
     }
   });
 
@@ -169,7 +169,7 @@
 
       console.log("Test Proxy: " + proxyUrl);
       proxiedRequest.get("https://www.nike.com", function(err, resp, body) {
-        if (resp && (resp.statusCode === 200 || resp.statusCode === 403 )) {
+        if (resp && (resp.statusCode === 200 || resp.statusCode === 403)) {
           io.sockets.emit("ProxyStatus", {
             index: tableIndex,
             code: 6,

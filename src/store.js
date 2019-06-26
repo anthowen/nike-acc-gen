@@ -1,6 +1,10 @@
 import Vue from "vue";
 import Vuex from "vuex";
+import VuexPersist from "vuex-persistfile";
 
+const persist = new VuexPersist({
+  path: "settings"
+});
 Vue.use(Vuex);
 
 export default new Vuex.Store({
@@ -14,9 +18,9 @@ export default new Vuex.Store({
       birthdate: "12/03/1986",
       password: "@tSt!~3ad#a",
       number: "432658932",
-      country: null,
-      gender: null,
-      generatorType: null
+      country: { name: "China" },
+      gender: { name: "Male" },
+      generatorType: { name: "Dot trick" }
     },
 
     profileList: [
@@ -35,10 +39,10 @@ export default new Vuex.Store({
     profileSettings: {
       provider: "",
       country: "",
-      tier: "",
-      username: "",
-      token: "",
-      name: "",
+      tier: "1002",
+      username: "User1",
+      token: "10905b183e62747505885",
+      name: "Profile1",
       profile: ""
     },
 
@@ -209,5 +213,6 @@ export default new Vuex.Store({
       for (let key in state.accountProfiles)
         state.profileList.push({ name: key });
     }
-  }
+  },
+  plugins: [persist.subscribe()]
 });
