@@ -39,7 +39,9 @@ export default {
       this.tableData = this.$store.getters.createdList;
       console.log("Verify Log page : After did mount");
     });
-    this.$socket.on("VerifyLog", data => {
+  },
+  sockets: {
+    VerifyLog(data) {
       console.log("VerifyLog event is trigged on client.");
 
       if (typeof data === "string") console.log(data);
@@ -51,7 +53,7 @@ export default {
         if (data.message.includes("phonenumber"))
           this.tableData[data.index].number = data.phonenumber;
       }
-    });
+    }
   },
   components: {
     LogTable
@@ -88,6 +90,10 @@ export default {
     clearLog() {},
     startVerification() {
       const profileSettings = this.$store.getters.profileSettings;
+      if (!profileSettings.profile || !profileSettings.profile.name) {
+        alert("Please select proper profile on Settings");
+        return;
+      }
 
       for (var i = 0; i < this.tableData.length; i++) {
         this.checkUniqueness(
@@ -101,10 +107,14 @@ export default {
             email: this.tableData[i].account_email,
             password: this.tableData[i].password
           },
-          profileSettings.smsLogin["getsmscode"]
+          {
+            provider: profileSettings.provider.name,
+            username: profileSettings.username,
+            token: profileSettings.token
+          }
         ).then(response => {
           console.log("second catch response");
-          console.log(response.data);
+          console.log(response);
         });
       }
     },

@@ -18,6 +18,6 @@ new Vue({
   render: h => h(App)
 }).$mount("#app");
 
-process.on("unhandledRejection", error => {
-  console.error(error);
-});
+// process.on("unhandledRejection", error => {
+//   console.error(error);
+// });

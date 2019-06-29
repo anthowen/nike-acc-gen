@@ -77,15 +77,15 @@
     maxConcurrency: 2,
     timeout: 160000,
     puppeteerOptions: {
-      headless: false,
-      slowMo: 100,
+      // headless: false,
+      // slowMo: 100,
       // headless: true,
-      // args: ["--fast-start", "--disable-extensions", "--no-sandbox"],
+      args: ["--fast-start", "--disable-extensions", "--no-sandbox"],
       ignoreHTTPSErrors: true,
       executablePath:
         process.env.NODE_ENV === "production"
           ? "./chrome-win/chrome.exe"
-          : "./node_modules/puppeteer/.local-chromium/win64-669486/chrome-win/chrome.exe"
+          : "./node_modules/puppeteer/.local-chromium/win64-672088/chrome-win/chrome.exe"
     }
   });
 
@@ -94,12 +94,17 @@
     var user = pack.body.user;
     var sms = pack.body.sms;
 
-    if (pack.mode === "create") {
-      if (user.country === "China")
-        await chineseAccountBot.doCreate(page, io, proxy, user, sms);
-      else await createAccountBot.doCreate(page, io, proxy, user);
-    } else if (pack.mode === "verify") {
-      await verifyAccountBot.doVerify(page, io, proxy, user, sms);
+    try {
+      if (pack.mode === "create") {
+        if (user.country === "China")
+          await chineseAccountBot.doCreate(page, io, proxy, user, sms);
+        else await createAccountBot.doCreate(page, io, proxy, user);
+      } else if (pack.mode === "verify") {
+        await verifyAccountBot.doVerify(page, io, proxy, user, sms);
+      }
+    } catch (e) {
+      console.log("Error from axios cluster.task");
+      console.log(e.message);
     }
   });
 
@@ -221,7 +226,7 @@
     // initialize this client's sequence number
     clientList.push(client);
 
-    client.emit("General", "Client connection received");
+    client.emit("generalChannel", "Client connection received");
 
     client.on("error", error => {
       console.log(`[${client.id}] error: ${error}`);
@@ -229,7 +234,7 @@
 
     client.on("join", message => {
       console.log("joined with message : " + message);
-      client.broadcast.emit("General", "'" + message + "' message broadcasted");
+      client.emit("generalChannel", "'" + message + "' message broadcasted");
     });
     // when socket disconnects, remove it from the list:
     client.on("disconnect", () => {

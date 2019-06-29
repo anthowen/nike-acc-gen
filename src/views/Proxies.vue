@@ -54,9 +54,12 @@ import { ConcurrencyManager } from "axios-concurrency";
 // @ is an alias to /src
 
 export default {
-  mounted() {
-    let self = this;
-    self.$socket.on("ProxyStatus", data => {
+  components: {
+    LogTable
+  },
+  sockets: {
+    ProxyStatus(data) {
+      let self = this;
       console.log("ProxyStatus event is trigged on client.");
 
       if (typeof data === "string") console.log(data);
@@ -66,10 +69,7 @@ export default {
           message: data.message
         };
       }
-    });
-  },
-  components: {
-    LogTable
+    }
   },
   data() {
     return {

@@ -15,23 +15,33 @@ import FooterBar from "./components/FooterBar.vue";
 import "animate.css/animate.css";
 
 export default {
-  mounted() {
-    this.$socket.on("General", data => {
-      console.log("General event is trigged on App Main Client.");
-
-      if (typeof data === "string") console.log(data);
-      else if (typeof data === "object") {
-        this.tableData[data.index].status = {
-          code: data.code,
-          message: data.message
-        };
-      }
-    });
+  data() {
+    return {
+      isConnected: false,
+      socketMessage: ''
+    }
   },
   components: {
     MenuBar,
     FooterBar
-  }
+  },
+  sockets: {
+    connect() {
+      // Fired when the socket connects.
+      this.isConnected = true;
+    },
+
+    disconnect() {
+      this.isConnected = false;
+    },
+
+    // Fired when the server sends something on the "messageChannel" channel.
+    generalChannel(data) {
+      this.socketMessage = data;
+      console.log("General event is trigged on App Main Client.");
+      console.log(this.socketMessage);
+    }
+  },
 };
 </script>
 

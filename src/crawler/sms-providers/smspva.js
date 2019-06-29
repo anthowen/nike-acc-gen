@@ -1,12 +1,11 @@
 // smspva
-const nodeFetch = require("node-fetch");
+const axios = require("axios");
 // price
 const prices = {
   UK: 1,
   US: 0.75
 };
 
-const country = "UK";
 let respTxt = "API KEY Incorrect";
 
 const errorCodes = {
@@ -15,9 +14,9 @@ const errorCodes = {
   6: "You will be banned for 10 minutes, because scored negative karma",
   7: "You have exceeded the number of concurrent streams. SMS Wait from previous orders"
 };
-const token = "oG3bjxrWLS6cSD1iEUh40ERVbNkLCb";
+let token = "oG3bjxrWLS6cSD1iEUh40ERVbNkLCb";
 const host =
-  "http://smspva.com/priemnik.php?apikey=" + token + "&service=opt86&metod=";
+  "https://smspva.com/priemnik.php?apikey=" + token + "&service=opt86&metod=";
 
 class SMSPvaError extends Error {
   constructor(action = "default", code = "2", ...params) {
@@ -40,46 +39,84 @@ class SMSPvaError extends Error {
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 const getData = async (action, params) => {
-  const response = await nodeFetch(host + action + params);
-  respTxt = await response.text(); // Parse it as text
-  const json = JSON.parse(respTxt); // Try to parse it as json
+  console.log(host + action + params);
+  const response = await axios(host + action + params);
+  const json = response.data; // Try to parse it as json
   // Do your JSON handling here
 
   if (json.response === "1") {
     console.log(">>> Success with | " + action + " |");
     return json;
+  } else if (json.response === "2" && action === "get_sms") {
+    console.log("Waiting for message");
+    return null;
   }
   throw new SMSPvaError(action, json.response, "Unexpected response code");
 };
 
-(async () => {
+const doProcess = async (
+  requestDetails,
+  balanceCallback,
+  numberCallback,
+  smsCallback,
+  errorCallback
+) => {
   try {
-    let resp = await getData("get_balance", "");
-    console.log("Balance: " + resp.balance);
+    const country = requestDetails.country;
+    token = requestDetails.token;
 
-    if (parseInt(resp.balance) < prices[country])
-      throw new Error("Low balance");
+    console.log("> Request Details: ");
+    console.log(requestDetails);
+
+    let resp;
+
+    if (balanceCallback) {
+      resp = await getData("get_balance", "");
+      console.log("Balance: " + resp.balance);
+
+      if (parseInt(resp.balance) < prices[country])
+        throw new Error("Low balance");
+      balanceCallback(resp);
+    }
 
     await sleep(500);
     resp = await getData("get_number", "&country=" + country);
-    console.log("Phone number : ", resp.number);
+    numberCallback(resp.number);
+    const requestNumberId = resp.id;
 
-    await sleep(500);
-    resp = await getData("get_sms", "&country=" + country + "&id=" + resp.id);
+    await sleep(30000);
+    resp = await getData(
+      "get_sms",
+      "&country=" + country + "&id=" + requestNumberId
+    );
 
-    console.log("SMS received : " + resp.sms);
+    if (!resp) {
+      await sleep(12000);
+      resp = await getData(
+        "get_sms",
+        "&country=" + country + "&id=" + requestNumberId
+      );
+    }
+
+    smsCallback(resp.sms);
   } catch (e) {
+    console.log(e);
     if (e instanceof SyntaxError) {
       console.log("Catched SyntaxError:");
-      console.log(respTxt);
+      errorCallback(respTxt);
     } else if (e instanceof SMSPvaError) {
       console.log("Catched SMSPvaError: " + e.message);
 
       if (e.action.includes("get_sms")) {
-        console.log("SMS hasn't found yet");
+        errorCallback("SMS hasn't found yet");
       } else {
-        console.log(errorCodes[e.code]);
+        errorCallback(errorCodes[e.code]);
       }
-    } else if (e instanceof Error) console.log(e.message);
+    } else if (e instanceof Error) errorCallback(e.message);
+    else errorCallback(e.message);
   }
-})();
+};
+
+module.exports = {
+  doProcess
+};

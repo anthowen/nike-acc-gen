@@ -39,8 +39,9 @@ export default {
       this.tableData = this.$store.getters.pendingList;
       console.log("AccountLog page : After did mount");
     });
-
-    this.$socket.on("CreateLog", data => {
+  },
+  sockets: {
+    CreateLog(data) {
       console.log("CreateLog event is trigged on client.");
 
       if (typeof data === "string") console.log(data);
@@ -55,7 +56,7 @@ export default {
           this.$store.commit("ADD_TO_CREATED_LIST", this.tableData[data.index]);
         }
       }
-    });
+    }
   },
   components: {
     LogTable
@@ -79,7 +80,7 @@ export default {
   methods: {
     exportLog() {},
     clearLog() {
-      this.tableData.length = 0;
+      this.tableData = [];
       this.$store.commit("EMPTY_PENDING_LIST");
     },
     checkUniqueness(proxyInfo, userInfo, smsInfo) {
@@ -97,6 +98,7 @@ export default {
         });
     },
     async startCreatingAccount() {
+      console.log("startCreatingAccount");
       this.$socket.emit("join", {
         message: "Create account started"
       });

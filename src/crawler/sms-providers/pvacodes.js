@@ -1,5 +1,5 @@
 // smspva
-// const nodeFetch = require("node-fetch");
+const axios = require("axios");
 // price
 const prices = {
   UK: 3,
@@ -44,11 +44,8 @@ class PVACodesError extends Error {
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 const getData = async (action, params) => {
-  const response = await require("node-fetch")(
-    host + action + customerString + params
-  );
-  respTxt = await response.text(); // Parse it as text
-  const json = JSON.parse(respTxt); // Try to parse it as json
+  const response = await axios(host + action + customerString + params);
+  const json = response.data; // Try to parse it as json
   // Do your JSON handling here
 
   console.log(json);
@@ -93,6 +90,7 @@ const doProcess = async (
       "&country=" + countryNames[country] + "&app=" + appNames[country]
     );
 
+    if (isNaN(resp)) throw new Error(resp);
     numberCallback(resp);
 
     console.log("Getting Text Message: 30s wait");
@@ -108,6 +106,7 @@ const doProcess = async (
     );
 
     // Example: 784549
+    if (isNaN(resp)) throw new Error(resp);
     smsCallback(resp);
   } catch (e) {
     console.log(e);

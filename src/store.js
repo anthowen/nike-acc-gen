@@ -20,7 +20,7 @@ export default new Vuex.Store({
       number: "432658932",
       country: { name: "China" },
       gender: { name: "Male" },
-      generatorType: { name: "Dot trick" }
+      generatorType: { name: "Dot trick", type: 1 }
     },
 
     profileList: [
@@ -37,11 +37,11 @@ export default new Vuex.Store({
     accountProfiles: {},
 
     profileSettings: {
-      provider: "",
+      provider: { name: "smspva" },
       country: "",
       tier: "1002",
       username: "User1",
-      token: "10905b183e62747505885",
+      token: "oG3bjxrWLS6cSD1iEUh40ERVbNkLCb",
       name: "Profile1",
       profile: ""
     },
@@ -71,16 +71,16 @@ export default new Vuex.Store({
 
     // This is data for 'Verify Log' page, and is going to be verified.
     createdList: [
-      // {
-      //   country: "United Kingdom",
-      //   number: "###########",
-      //   account_email: "garry.lampard+lzhb2q@gmail.com",
-      //   password: "@tSt!~3ad#a",
-      //   status: {
-      //     code: 0,
-      //     message: "Idle"
-      //   }
-      // }
+      {
+        country: "United Kingdom",
+        number: "###########",
+        account_email: "a.aswsdfba.l.a.ck2.0.1.9@gmail.com",
+        password: "@tSt!~3ad#a",
+        status: {
+          code: 0,
+          message: "Idle"
+        }
+      }
     ]
   },
   getters: {
@@ -106,6 +106,7 @@ export default new Vuex.Store({
   mutations: {
     SET_ACCOUNT_SETTINGS: (state, payload) => {
       state.accountSettings = Vue._.cloneDeep(payload);
+      console.log(state.accountSettings);
     },
     SET_DEFAULT_SETTINGS: (state, payload) => {
       state.defaultSettings = Vue._.cloneDeep(payload);
@@ -113,16 +114,13 @@ export default new Vuex.Store({
     SET_PROFILE_SETTINGS: (state, payload) => {
       state.profileSettings = Vue._.cloneDeep(payload);
     },
-    ADD_ACCOUNT_SETTINGS: (state, payload) => {
-      state.accountSettings.push(payload);
-    },
     ADD_TO_PENDING_LIST: (state, data) => {
       console.log("committing ADD_TO_PENDING_LIST");
       data.every(item => state.pendingList.push(item));
     },
     EMPTY_PENDING_LIST: state => {
       console.log("committing EMPTY_PENDING_LIST");
-      state.pendingList.length = 0;
+      state.pendingList = [];
     },
     SET_CREATED_LIST: (state, data) => {
       console.log("committing SET_CREATED_LIST");

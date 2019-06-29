@@ -160,6 +160,12 @@ const doCreate = async (page, io, proxy, user, sms) => {
         code: 3,
         message: "Failed to get SMS"
       });
+    } else if (e.message.includes("No free channels")) {
+      io.sockets.emit("CreateLog", {
+        index: user.tableIndex,
+        code: 3,
+        message: "Phone not available"
+      });
     }
     return;
   }
