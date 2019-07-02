@@ -13,15 +13,15 @@
             v-model="defaultSettings.discord"
             type="text"
             placeholder="Discord Webhook"
-          >
+          />
           <button
-            class="test-discord-webhook absolute px-4 py-1 order-solid border-2 border-nike-green text-white text-lg rounded-lg"
+            class="test-discord-webhook absolute px-4 py-1 order-solid border-2 border-nike-green text-white text-lg rounded-lg bg-nike-darkest"
             @click="testDiscordWebhook"
           >Test</button>
           <nike-select
             :options="proxyGroup"
             :placeholder="'Proxy Group'"
-            :selected="defaultSettings.discord"
+            :selected="defaultSettings.proxyGroup"
             v-on:updateOption="onCountrySelect"
             class="m-3 w-full"
           ></nike-select>
@@ -30,16 +30,18 @@
         <div class="flex-1 px-4 py-2 m-2">
           <input
             class="border border-nike-border bg-nike-darkest rounded-lg h-10 w-full py-2 px-3 text-grey m-3"
-            id="lastName"
-            type="text"
+            id="typingSpeed"
+            type="number"
+            v-model="defaultSettings.typingSpeed"
             placeholder="Typing Speed (char/sec)"
-          >
+          />
           <input
             class="border border-nike-border bg-nike-darkest rounded-lg h-10 w-full py-2 px-3 text-grey m-3"
-            id="lastName"
-            type="text"
+            id="threadCount"
+            type="number"
+            v-model="defaultSettings.threadCount"
             placeholder="Thread Count"
-          >
+          />
           <div class="flex justify-center m-3">
             <button
               class="ml-8 mr-4 px-10 py-2 order-solid border-2 border-nike-green text-white text-lg rounded-lg"
@@ -55,14 +57,15 @@
         <div class="flex-1 px-4 py-2 m-2">
           <input
             class="border border-nike-border bg-nike-darkest rounded-lg h-10 w-full py-2 px-3 text-grey m-3"
-            id="lastName"
-            type="text"
+            id="automationDelay"
+            type="number"
+            v-model="defaultSettings.automationDelay"
             placeholder="Automation Delay"
-          >
+          />
           <nike-select
             :options="attemptCount"
             :placeholder="'Attempt Count'"
-            :selected="settings.generatorType"
+            :selected="defaultSettings.attemptCount"
             v-on:updateOption="onCountrySelect"
             class="m-3 w-full"
           ></nike-select>
@@ -83,13 +86,13 @@
             type="text"
             placeholder="Profile Name"
             v-model="profileSettings.name"
-          >
+          />
           <input
             class="border border-nike-border bg-nike-darkest rounded-lg h-10 w-full py-2 px-3 text-grey m-3"
             type="text"
             placeholder="Token"
             v-model="profileSettings.token"
-          >
+          />
           <nike-select
             :options="profileList"
             :placeholder="'Load Profile'"
@@ -113,7 +116,7 @@
             type="text"
             placeholder="Username"
             v-model="profileSettings.username"
-          >
+          />
           <div class="flex justify-center m-3">
             <button
               class="ml-8 mr-4 px-10 py-2 order-solid border-2 border-nike-green text-white text-lg rounded-lg"
@@ -140,7 +143,7 @@
             type="text"
             placeholder="Tier (Cloud sms)"
             v-model="profileSettings.tier"
-          >
+          />
         </div>
       </div>
     </div>
@@ -156,7 +159,11 @@ export default {
       this.settings = this.$store.getters.accountSettings;
       this.profileSettings = this.$store.getters.profileSettings;
       this.profileList = this.$store.getters.profileList;
+      this.defaultSettings = this.$store.getters.defaultSettings;
       console.log("Settings page : After did mount");
+
+      // const Hook = new webhook.Webhook(this.defaultSettings.discordWebhook);
+      // Hook.info("ReportBot", "Info");
     });
   },
   data() {
@@ -259,9 +266,53 @@ export default {
       this.$store.commit("SET_ACCOUNT_SETTINGS", this.settings);
     },
 
-    testDiscordWebhook() {},
-    saveDefaultSettings() {},
-    resetDefaultSettings() {},
+    testDiscordWebhook() {
+      if (!this.defaultSettings.discord) alert("Please input Webhook Url");
+      window
+        .fetch(this.defaultSettings.discord)
+        .then(data => {
+          console.log(data);
+          if (data.status === 200) {
+            alert("Webhook is working !");
+            const webhook = require("webhook-discord");
+            const Hook = new webhook.Webhook(this.defaultSettings.discord);
+
+            // `file://${process.cwd()}/src/assets/cn.png`;
+            const msg = new webhook.MessageBuilder()
+              .setName("ReportBot")
+              .setColor("#ee2200")
+              .setText("Added new account !")
+              .addField("Username:", "bhf3xce48g@garryteam.co.uk")
+              .addField("Password:", "@tSt!~3ad#a")
+              .addField("Region:", "China")
+              .addField("Number:", "+86 245 345-1235")
+              .setImage("https://www.countryflags.io/cn/flat/32.png")
+              .setTime();
+
+            Hook.send(msg);
+          } else {
+            alert("Webhook is not valid !");
+          }
+        })
+        .catch(error => {
+          console.log(error);
+          alert("Webhook Url is invalid !");
+        });
+    },
+    saveDefaultSettings() {
+      this.$store.commit("SET_DEFAULT_SETTINGS", this.defaultSettings);
+    },
+    resetDefaultSettings() {
+      this.defaultSettings = {
+        discord:
+          "https://discordapp.com/api/webhooks/595354326764093481/CBpbGk-oJb9UXM-NGYE5HaLrYIxkpchqk19I19AGmsXwHO5v_oWkea3LTVdAUtVJ0cd-",
+        typingSpeed: 3,
+        threadCount: 2,
+        automationDelay: 10,
+        attemptCount: "",
+        proxyGroup: ""
+      };
+    },
     saveProfileSettings() {
       this.$store.commit("ADD_TO_PROFILE_LIST", this.profileSettings);
     },

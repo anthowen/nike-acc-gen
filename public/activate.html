@@ -34,6 +34,13 @@
       .text-blue-grey {
         color: var(--NikeBlueGrey);
       }
+      input {
+        text-align: center;
+      }
+      ::-webkit-input-placeholder {
+        font-size: 2rem;
+        text-align: center;
+      }
     </style>
   </head>
   <body>
@@ -55,9 +62,10 @@
             />
           </svg>
         </div>
-        <div class="flex-1 px-4 py-2 m-2">
+        <div class="flex-2 px-4 py-2 m-2 w-10/12">
           <input
             class="border border-nike-border bg-nike-darkest rounded-lg h-10 w-full py-2 px-3 text-blue-grey m-3 text-lg"
+            id="activateCode"
             placeholder="xxx-xxx-xxx-xxx-xxx-xxx-xxx"
           />
         </div>
@@ -65,6 +73,7 @@
         <div class="flex-1 px-4 py-2 m-2">
           <button
             class="mx-5 px-10 py-2 order-solid border-2 border-nike-green text-white text-lg rounded-lg"
+            onclick="onClickActivate()"
           >
             Activate
           </button>
@@ -77,16 +86,67 @@
       type="text/javascript"
     ></script>
     <script type="text/javascript">
-      // vue instance
-      //   new Vue({
-      //   // mount point
-      //   el: '#app',
-      //   data: {
+      function onClickActivate() {
+        var activateCode = document.getElementById("activateCode");
+        if (!activateCode) {
+          alert("Please input activate key");
+          return;
+        }
 
-      //   },
-      //   methods: {
+        window
+          .fetch("http://localhost:5000/activate/verify", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(activateCode) // body data type must match "Content-Type" header
+          })
+          .then(response => response.json())
+          .then(data => {
+            console.log(data);
+            if (data.verified) {
+              alert("Successfully verified");
+              startMain();
+            } else {
+              alert("License key is not valid");
+            }
+          }) // JSON-string from `response.json()` call
+          .catch(error => {
+            console.log(error);
+            alert("Connection problem occuered. Please contact admin");
+          });
+      }
 
-      //   });
+      function startMain() {
+        window.location.href = "http://localhost:8080/";
+      }
+
+      function init() {
+        window
+          .fetch("http://localhost:5000/activate", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            }
+          })
+          .then(response => response.json())
+          .then(data => {
+            console.log(data);
+            if (data.activated) {
+              startMain();
+            }
+          }) // JSON-string from `response.json()` call
+          .catch(error => {
+            console.log(error);
+            alert("Connection problem occuered. Please contact admin");
+          });
+      }
+
+      document.onreadystatechange = function(e) {
+        if (document.readyState === "complete") {
+          init();
+        }
+      };
     </script>
   </body>
 </html>

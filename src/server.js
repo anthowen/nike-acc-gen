@@ -8,6 +8,7 @@
   const cors = require("cors");
   const { Cluster } = require("puppeteer-cluster");
   const config = require("./crawler/config");
+  const activateRouter = require("./backend/activate");
 
   const createAccountBot = require("./crawler/create-bot");
   const verifyAccountBot = require("./crawler/verify-bot");
@@ -70,6 +71,7 @@
   });
 
   app.use(cors(corsOptions));
+  app.use("/activate", activateRouter);
 
   // Puppeteer Cluster
   const cluster = await Cluster.launch({

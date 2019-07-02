@@ -25,6 +25,7 @@
     "request": "^2.88.0",
     "socket.io": "^2.2.0",
     "socket.io-client": "^2.2.0",
+    "username": "^5.1.0",
     "uws": "^100.0.1",
     "vue": "^2.6.10",
     "vue-flickity": "^1.1.2",
@@ -33,7 +34,8 @@
     "vue-select": "^3.1.0",
     "vue-socket.io": "^2.1.1",
     "vuex": "^3.1.1",
-    "vuex-persistfile": "^0.1.4"
+    "vuex-persistfile": "^0.1.4",
+    "webhook-discord": "^3.2.0"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.8.0",

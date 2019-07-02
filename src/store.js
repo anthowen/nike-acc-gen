@@ -47,11 +47,12 @@ export default new Vuex.Store({
     },
 
     defaultSettings: {
-      discordWebhook: "",
+      discord:
+        "https://discordapp.com/api/webhooks/595354326764093481/CBpbGk-oJb9UXM-NGYE5HaLrYIxkpchqk19I19AGmsXwHO5v_oWkea3LTVdAUtVJ0cd-",
       typingSpeed: 3,
       threadCount: 2,
       automationDelay: 10,
-      attemptCount: 0,
+      attemptCount: "",
       proxyGroup: ""
     },
 
@@ -134,6 +135,20 @@ export default new Vuex.Store({
     },
     ADD_TO_CREATED_LIST: (state, data) => {
       console.log("committing ADD_TO_CREATED_LIST");
+
+      const webhook = require("webhook-discord");
+      const Hook = new webhook.Webhook(state.defaultSettings.discord);
+      const msg = new webhook.MessageBuilder()
+        .setName("Username")
+        .setColor("#aabbcc")
+        .setText("This is my webhook!")
+        .addField("This", "is")
+        .addField("my", "webhook!")
+        .setImage("Image url")
+        .setTime();
+
+      Hook.send(msg);
+
       for (var i = 0; i < state.createdList.length; i++) {
         if (state.createdList[i].account_email === data.email) break;
       }
