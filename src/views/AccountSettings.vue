@@ -184,7 +184,7 @@ export default {
       ],
       currentProvider: "",
       availableSmsCountryList: {
-        getsmscode: [{ name: "United States" }, { name: "United Kingdom" }, { name: "China" }],
+        getsmscode: [{ name: "United States" }, { name: "China" }],
         pvacodes: [{ name: "United States" }, { name: "United Kingdom" }, { name: "China" }],
         smspva: [{ name: "United Kingdom" }],
         smsaccs: [{ name: "United States" }, { name: "United Kingdom" }]

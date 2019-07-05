@@ -52,8 +52,30 @@ export default {
         };
         if (data.message.includes("phonenumber"))
           this.tableData[data.index].number = data.phonenumber;
-        if (data.code === 6 && !data.message.includes("verified")) {
-          this.$store.commit("ADD_TO_CREATED_LIST", this.tableData[data.index]);
+        if (data.code === 6) {
+          if (!data.message.includes("verified")) {
+            this.$store.commit(
+              "ADD_TO_CREATED_LIST",
+              this.tableData[data.index]
+            );
+          } else {
+            // Sending to Discord
+            const webhook = require("webhook-discord");
+            const defaultSettings = this.$store.getters.defaultSettings;
+            const Hook = new webhook.Webhook(defaultSettings.discord);
+
+            const msg = new webhook.MessageBuilder()
+              .setName("ReportBot")
+              .setColor("#ee2200")
+              .setText("Added new account !")
+              .addField("Username:", this.tableData[data.index].email)
+              .addField("Password:", this.tableData[data.index].password)
+              .addField("Number:", this.tableData[data.index].number)
+              .setImage(`https://www.countryflags.io/cn/shiny/32.png`)
+              .setTime();
+
+            Hook.send(msg);
+          }
         }
       }
     }

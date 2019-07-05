@@ -93,13 +93,16 @@
           return;
         }
 
+        console.log(activateCode.value);
+
         window
           .fetch("http://localhost:5000/activate/verify", {
             method: "POST",
             headers: {
+              Accept: "application/json",
               "Content-Type": "application/json"
             },
-            body: JSON.stringify(activateCode) // body data type must match "Content-Type" header
+            body: JSON.stringify({ key: activateCode.value }) // body data type must match "Content-Type" header
           })
           .then(response => response.json())
           .then(data => {

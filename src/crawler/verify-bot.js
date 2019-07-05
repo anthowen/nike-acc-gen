@@ -228,19 +228,18 @@ let doVerify = async (page, io, proxy, user, sms) => {
       errorCallback
     );
   } catch (e) {
+    let errMessage = "Error";
     if (e.message.includes("sms")) {
-      io.sockets.emit("VerifyLog", {
-        index: user.tableIndex,
-        code: 3,
-        message: "Failed to get SMS"
-      });
+      errMessage = "Failed to get SMS";
     } else if (e.message.includes("No free channels")) {
-      io.sockets.emit("CreateLog", {
-        index: user.tableIndex,
-        code: 3,
-        message: "Phone not available"
-      });
+      errMessage = "Phone not available";
     }
+
+    io.sockets.emit("VerifyLog", {
+      index: user.tableIndex,
+      code: 3,
+      message: errMessage
+    });
     return;
   }
 
@@ -255,7 +254,8 @@ let doVerify = async (page, io, proxy, user, sms) => {
   io.sockets.emit("VerifyLog", {
     index: user.tableIndex,
     code: 6,
-    message: "Accont verified"
+    message: "Accont verified",
+    country: user.country === "United Kingdom" ? "uk" : "us"
   });
 };
 

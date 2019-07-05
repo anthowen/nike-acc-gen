@@ -7,7 +7,6 @@
   const bodyParser = require("body-parser");
   const cors = require("cors");
   const { Cluster } = require("puppeteer-cluster");
-  const config = require("./crawler/config");
   const activateRouter = require("./backend/activate");
 
   const createAccountBot = require("./crawler/create-bot");
@@ -24,17 +23,6 @@
     path: "/mypath",
     serveClient: false
   });
-
-  // const fs = require("fs");
-  // const writeStream = fs.createWriteStream("./test.log", {
-  //   encoding: "utf8",
-  //   flags: "w"
-  // });
-
-  // process.stdout = require("stream").Writable();
-  // process.stdout._write = function(chunk, encoding, callback) {
-  //   writeStream.write(chunk, encoding, callback);
-  // };
 
   server.listen(PORT, () => {
     console.log("Listening on *:" + PORT);
@@ -82,7 +70,12 @@
       // headless: false,
       // slowMo: 100,
       // headless: true,
-      args: ["--fast-start", "--disable-extensions", "--no-sandbox"],
+      args: [
+        "--fast-start",
+        "--disable-extensions",
+        "--no-sandbox"
+        // "--proxy-server=69.171.219.132:14888:proxy187292:8AWdkQpW"
+      ],
       ignoreHTTPSErrors: true,
       executablePath:
         process.env.NODE_ENV === "production"
@@ -107,6 +100,21 @@
     } catch (e) {
       console.log("Error from axios cluster.task");
       console.log(e.message);
+
+      const emitTag = pack.mode === "create" ? "CreateLog" : "VerifyLog";
+      let message = "Error";
+
+      if (e.message.includes("ERR_NO_SUPPORTED_PROXIES")) {
+        message += ": Proxy";
+      } else if (e.message.includes("")) {
+        message += ": ";
+      }
+
+      io.sockets.emit(emitTag, {
+        index: user.tableIndex,
+        code: 3,
+        message: message
+      });
     }
   });
 

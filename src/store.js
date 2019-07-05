@@ -1,10 +1,35 @@
 import Vue from "vue";
 import Vuex from "vuex";
-import VuexPersist from "vuex-persistfile";
+import VuexPersistence from "vuex-persist";
+import storage from "electron-json-storage";
+const {
+  remote: { app }
+} = require("electron");
+import path from "path";
+import { promisify } from "util";
+// import VuexPersist from "vuex-persistfile";
 
-const persist = new VuexPersist({
-  path: "settings"
+// const persist = new VuexPersist({
+//   path: "settings"
+// });
+
+// This is for Vuex Store save & load when it runs up and down
+storage.setDataPath(path.join(app.getPath("userData"), "settings"));
+const get = promisify(storage.get);
+const set = promisify(storage.set);
+const remove = promisify(storage.remove);
+const clear = promisify(storage.clear);
+
+const vuexLocal = new VuexPersistence({
+  asyncStorage: true,
+  storage: {
+    getItem: get,
+    setItem: set,
+    removeItem: remove,
+    clear: clear
+  }
 });
+
 Vue.use(Vuex);
 
 export default new Vuex.Store({
@@ -60,28 +85,31 @@ export default new Vuex.Store({
     pendingList: [],
 
     proxyList: [
-      {
-        host: "",
-        port: "",
-        username: "",
-        password: "",
-        status: "",
-        group: ""
-      }
+      // {
+      //   proxy: "",
+      //   status: {
+      //     code: 2,
+      //     message: "Ready"
+      //   }
+      // }
     ],
+
+    proxyGroupList: {
+      // "Group1" : {}
+    },
 
     // This is data for 'Verify Log' page, and is going to be verified.
     createdList: [
-      {
-        country: "United Kingdom",
-        number: "###########",
-        account_email: "a.aswsdfba.l.a.ck2.0.1.9@gmail.com",
-        password: "@tSt!~3ad#a",
-        status: {
-          code: 0,
-          message: "Idle"
-        }
-      }
+      // {
+      //   country: "United Kingdom",
+      //   number: "###########",
+      //   account_email: "a.aswsdfba.l.a.ck2.0.1.9@gmail.com",
+      //   password: "@tSt!~3ad#a",
+      //   status: {
+      //     code: 0,
+      //     message: "Idle"
+      //   }
+      // }
     ]
   },
   getters: {
@@ -102,27 +130,52 @@ export default new Vuex.Store({
     },
     createdList: state => {
       return state.createdList;
+    },
+    proxyList: state => {
+      return state.proxyList;
+    },
+    proxyGroupList: state => {
+      return state.proxyGroupList;
     }
   },
   mutations: {
+    // Used @AccountSettings Page
     SET_ACCOUNT_SETTINGS: (state, payload) => {
       state.accountSettings = Vue._.cloneDeep(payload);
       console.log(state.accountSettings);
     },
+
+    // Used @Settings Page
     SET_DEFAULT_SETTINGS: (state, payload) => {
       state.defaultSettings = Vue._.cloneDeep(payload);
     },
     SET_PROFILE_SETTINGS: (state, payload) => {
       state.profileSettings = Vue._.cloneDeep(payload);
     },
+
+    // Used @Proxies Page
+    SET_PROXY_LIST: (state, payload) => {
+      state.proxyList = Vue._.cloneDeep(payload);
+    },
+
+    // Used @Proxies Page
+    SET_PROXY_GROUP_LIST: (state, payload) => {
+      state.proxyGroupList = payload;
+    },
+
+    // Used @AccountSettings Page
     ADD_TO_PENDING_LIST: (state, data) => {
       console.log("committing ADD_TO_PENDING_LIST");
       data.every(item => state.pendingList.push(item));
     },
+
+    // Used @AccountLog Page
     EMPTY_PENDING_LIST: state => {
       console.log("committing EMPTY_PENDING_LIST");
       state.pendingList = [];
     },
+
+    // Used @AccountLog Page for Verify Page
     SET_CREATED_LIST: (state, data) => {
       console.log("committing SET_CREATED_LIST");
 
@@ -133,6 +186,8 @@ export default new Vuex.Store({
 
       console.log(state.createdList);
     },
+
+    // Used @AccountLog Page
     ADD_TO_CREATED_LIST: (state, data) => {
       console.log("committing ADD_TO_CREATED_LIST");
 
@@ -182,7 +237,7 @@ export default new Vuex.Store({
       if (!existed) state.profileList.push({ name: profile.name });
     },
 
-    //
+    // Used @Settings Page
     LOAD_PROFILE: (state, profile) => {
       if (!profile || !(profile.name in state.accountProfiles)) {
         alert("Selected profile does not exist");
@@ -227,5 +282,6 @@ export default new Vuex.Store({
         state.profileList.push({ name: key });
     }
   },
-  plugins: [persist.subscribe()]
+  // plugins: [persist.subscribe()]
+  plugins: [vuexLocal.plugin]
 });

@@ -7,7 +7,13 @@
 
     <div class="flex">
       <div class="flex-1 mx-4 proxy-list">
-        <log-table class="mt-5" :tConfig="proxyTableConfig" :tData="proxyData" :tHeight="85"></log-table>
+        <log-table
+          class="mt-5"
+          :tConfig="proxyTableConfig"
+          :tData="proxyData"
+          :tHeight="85"
+          :key="proxyTableKey"
+        ></log-table>
 
         <div class="button-group flex justify-between">
           <button
@@ -22,11 +28,17 @@
             class="mx-5 px-10 py-2 order-solid border-2 border-nike-yellow text-white text-lg rounded-lg raise"
             @click="$refs.proxyFile.click()"
           >Add</button>
-          <input type="file" ref="proxyFile" class="invisible" @change="addProxies">
+          <input type="file" ref="proxyFile" class="invisible" @change="addProxies" />
         </div>
       </div>
       <div class="flex-1 mx-4 proxy-group-list">
-        <log-table class="mt-5" :tConfig="groupTableConfig" :tData="groupData" :tHeight="50"></log-table>
+        <log-table
+          class="mt-5"
+          :tConfig="groupTableConfig"
+          :tData="groupTableData"
+          :tHeight="50"
+          :key="proxyGroupTableKey"
+        ></log-table>
 
         <div class="button-group flex justify-between">
           <button
@@ -57,6 +69,22 @@ export default {
   components: {
     LogTable
   },
+  mounted() {
+    this.$nextTick(function() {
+      this.proxyData = this.$store.getters.proxyList;
+      this.groupData = this.$store.getters.proxyGroupList;
+      console.log("Proxies page : After did mount");
+    });
+  },
+  computed: {
+    groupTableData() {
+      let data = [];
+      for (let key in this.groupData) {
+        data.push({ name: key, status: this.groupData[key].status });
+      }
+      return data;
+    }
+  },
   sockets: {
     ProxyStatus(data) {
       let self = this;
@@ -73,6 +101,8 @@ export default {
   },
   data() {
     return {
+      proxyTableKey: 0,
+      proxyGroupTableKey: 0,
       proxyTableConfig: [
         { prop: "_index", name: "ID" },
         { prop: "proxy", name: "Proxy" },
@@ -83,30 +113,36 @@ export default {
         { prop: "name", name: "Group Name" },
         { prop: "status", name: "Proxies" }
       ],
-      proxyData: [],
-      groupData: []
+      proxyData: this.$store.getters.proxyList,
+      groupData: this.$store.getters.proxyGroupList
     };
   },
   methods: {
-    getRandomString(len) {
-      return [...Array(len)]
-        .map(() => (~~(Math.random() * 36)).toString(36))
-        .join("");
+    forceRerenderProxyTable() {
+      this.proxyTableKey += 1;
     },
-
+    forceRerenderProxyGroupTable() {
+      this.proxyGroupTableKey += 1;
+    },
     saveProxies() {
       // let setting = this.$store.getters.accountSettings;
-      var length = this.groupData.length;
-      this.groupData.push({
-        name: "Group" + (length + 1),
+      const groupNames = Object.getOwnPropertyNames(this.groupData);
+      var length = groupNames ? groupNames.length : 0;
+
+      this.groupData["Group" + (length + 1)] = {
+        proxies: this._.cloneDeep(this.proxyData),
         status: {
           code: 3,
           message: this.proxyData.length
         }
-      });
+      };
+
+      this.forceRerenderProxyGroupTable();
+      this.$store.commit("SET_PROXY_LIST", this.proxyData);
     },
     clearProxies() {
       this.proxyData.length = 0;
+      this.forceRerenderProxyTable();
     },
     addProxies() {
       if (window.FileReader) {
@@ -174,9 +210,11 @@ export default {
     },
     saveGroup() {
       // let setting = this.$store.getters.accountSettings;
+      this.$store.commit("SET_PROXY_GROUP_LIST", this.groupData);
     },
     clearGroup() {
-      this.groupData.length = 0;
+      this.groupData = {};
+      this.forceRerenderProxyGroupTable();
     },
     newGroup() {}
   }

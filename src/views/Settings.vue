@@ -22,7 +22,7 @@
             :options="proxyGroup"
             :placeholder="'Proxy Group'"
             :selected="defaultSettings.proxyGroup"
-            v-on:updateOption="onCountrySelect"
+            v-on:updateOption="onProxyGroupSelect"
             class="m-3 w-full"
           ></nike-select>
         </div>
@@ -66,7 +66,7 @@
             :options="attemptCount"
             :placeholder="'Attempt Count'"
             :selected="defaultSettings.attemptCount"
-            v-on:updateOption="onCountrySelect"
+            v-on:updateOption="onAttemptCountSelect"
             class="m-3 w-full"
           ></nike-select>
         </div>
@@ -156,27 +156,25 @@ export default {
   name: "home",
   mounted() {
     this.$nextTick(function() {
-      this.settings = this.$store.getters.accountSettings;
       this.profileSettings = this.$store.getters.profileSettings;
       this.profileList = this.$store.getters.profileList;
       this.defaultSettings = this.$store.getters.defaultSettings;
-      console.log("Settings page : After did mount");
 
-      // const Hook = new webhook.Webhook(this.defaultSettings.discordWebhook);
-      // Hook.info("ReportBot", "Info");
+      const groupData = this.$store.getters.proxyGroupList;
+      this.proxyGroup = [];
+      for (let key in groupData) {
+        this.proxyGroup.push({ name: key });
+      }
+
+      console.log("Settings page : After did mount");
     });
   },
   data() {
     return {
       profileSettings: this.$store.getters.profileSettings,
-      settings: this.$store.getters.accountSettings,
       profileList: this.$store.getters.profileList,
-      proxyGroup: [
-        { name: "Group 1" },
-        { name: "Group 2" },
-        { name: "Group 3" },
-        { name: "Group 4" }
-      ],
+      defaultSettings: this.$store.getters.defaultSettings,
+      proxyGroup: [],
       attemptCount: [
         { name: "1" },
         { name: "2" },
@@ -186,7 +184,7 @@ export default {
         { name: "6" }
       ],
       availableSmsCountryList: {
-        getsmscode: [{ name: "US" }, { name: "UK" }, { name: "CN" }],
+        getsmscode: [{ name: "US" }, { name: "CN" }],
         pvacodes: [{ name: "US" }, { name: "UK" }, { name: "CN" }],
         smspva: [{ name: "UK" }],
         smsaccs: [{ name: "US" }, { name: "UK" }]
@@ -196,12 +194,7 @@ export default {
         { name: "smspva" },
         { name: "pvacodes" },
         { name: "smsaccs" }
-      ],
-      errors: [],
-      defaultSettings: {
-        discord: ""
-      },
-      defaultSelectOptions: []
+      ]
     };
   },
   computed: {
@@ -216,6 +209,14 @@ export default {
   methods: {
     onCountrySelect(payload) {
       this.profileSettings.country = payload;
+    },
+
+    onProxyGroupSelect(payload) {
+      this.defaultSettings.proxyGroup = payload;
+    },
+
+    onAttemptCountSelect(payload) {
+      this.defaultSettings.attemptCount = payload;
     },
 
     onSmsProviderSelect(payload) {
@@ -234,37 +235,7 @@ export default {
       return !str || 0 === str.length;
     },
 
-    saveSettings() {
-      this.errors = [];
-
-      if (this.isEmptyString(this.settings.firstName)) {
-        this.errors.push("FirstName required.");
-      }
-      if (this.isEmptyString(this.settings.lastName)) {
-        this.errors.push("LastName required.");
-      }
-      if (this.settings.generatorType.type < 3) {
-        if (this.isEmptyString(this.settings.emailTemplate)) {
-          this.errors.push("Email Template is required.");
-        } else if (!this.validEmail(this.settings.emailTemplate)) {
-          this.errors.push("Valid email template is required.");
-        }
-      }
-
-      if (this.isEmptyString(this.settings.emailDomain)) {
-        this.errors.push("Email Domain is required.");
-      } else if (!this.settings.emailDomain.startsWith("@")) {
-        this.errors.push("Email Domain should start with @");
-      } else if (!this.settings.emailDomain.includes(".")) {
-        this.errors.push("Email Domain is not valid");
-      }
-
-      if (this.errors.length) {
-        return;
-      }
-
-      this.$store.commit("SET_ACCOUNT_SETTINGS", this.settings);
-    },
+    saveSettings() {},
 
     testDiscordWebhook() {
       if (!this.defaultSettings.discord) alert("Please input Webhook Url");
@@ -276,27 +247,14 @@ export default {
             alert("Webhook is working !");
             const webhook = require("webhook-discord");
             const Hook = new webhook.Webhook(this.defaultSettings.discord);
-
-            // `file://${process.cwd()}/src/assets/cn.png`;
-            const msg = new webhook.MessageBuilder()
-              .setName("ReportBot")
-              .setColor("#ee2200")
-              .setText("Added new account !")
-              .addField("Username:", "bhf3xce48g@garryteam.co.uk")
-              .addField("Password:", "@tSt!~3ad#a")
-              .addField("Region:", "China")
-              .addField("Number:", "+86 245 345-1235")
-              .setImage("https://www.countryflags.io/cn/flat/32.png")
-              .setTime();
-
-            Hook.send(msg);
+            Hook.info("ReportBot", "This is Discord Webhook test.");
           } else {
             alert("Webhook is not valid !");
           }
         })
         .catch(error => {
           console.log(error);
-          alert("Webhook Url is invalid !");
+          alert("Webhook is not invalid !");
         });
     },
     saveDefaultSettings() {
