@@ -64,7 +64,6 @@ export default new Vuex.Store({
     profileSettings: {
       provider: { name: "smspva" },
       country: "",
-      tier: "1002",
       username: "User1",
       token: "oG3bjxrWLS6cSD1iEUh40ERVbNkLCb",
       name: "Profile1",
@@ -74,10 +73,6 @@ export default new Vuex.Store({
     defaultSettings: {
       discord:
         "https://discordapp.com/api/webhooks/595354326764093481/CBpbGk-oJb9UXM-NGYE5HaLrYIxkpchqk19I19AGmsXwHO5v_oWkea3LTVdAUtVJ0cd-",
-      typingSpeed: 3,
-      threadCount: 2,
-      automationDelay: 10,
-      attemptCount: "",
       proxyGroup: ""
     },
 

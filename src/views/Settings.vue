@@ -18,6 +18,9 @@
             class="test-discord-webhook absolute px-4 py-1 order-solid border-2 border-nike-green text-white text-lg rounded-lg bg-nike-darkest"
             @click="testDiscordWebhook"
           >Test</button>
+        </div>
+
+        <div class="flex-1 px-4 py-2 m-2">
           <nike-select
             :options="proxyGroup"
             :placeholder="'Proxy Group'"
@@ -28,20 +31,6 @@
         </div>
 
         <div class="flex-1 px-4 py-2 m-2">
-          <input
-            class="border border-nike-border bg-nike-darkest rounded-lg h-10 w-full py-2 px-3 text-grey m-3"
-            id="typingSpeed"
-            type="number"
-            v-model="defaultSettings.typingSpeed"
-            placeholder="Typing Speed (char/sec)"
-          />
-          <input
-            class="border border-nike-border bg-nike-darkest rounded-lg h-10 w-full py-2 px-3 text-grey m-3"
-            id="threadCount"
-            type="number"
-            v-model="defaultSettings.threadCount"
-            placeholder="Thread Count"
-          />
           <div class="flex justify-center m-3">
             <button
               class="ml-8 mr-4 px-10 py-2 order-solid border-2 border-nike-green text-white text-lg rounded-lg"
@@ -52,23 +41,6 @@
               @click="resetDefaultSettings"
             >Reset</button>
           </div>
-        </div>
-
-        <div class="flex-1 px-4 py-2 m-2">
-          <input
-            class="border border-nike-border bg-nike-darkest rounded-lg h-10 w-full py-2 px-3 text-grey m-3"
-            id="automationDelay"
-            type="number"
-            v-model="defaultSettings.automationDelay"
-            placeholder="Automation Delay"
-          />
-          <nike-select
-            :options="attemptCount"
-            :placeholder="'Attempt Count'"
-            :selected="defaultSettings.attemptCount"
-            v-on:updateOption="onAttemptCountSelect"
-            class="m-3 w-full"
-          ></nike-select>
         </div>
       </div>
     </div>
@@ -86,12 +58,6 @@
             type="text"
             placeholder="Profile Name"
             v-model="profileSettings.name"
-          />
-          <input
-            class="border border-nike-border bg-nike-darkest rounded-lg h-10 w-full py-2 px-3 text-grey m-3"
-            type="text"
-            placeholder="Token"
-            v-model="profileSettings.token"
           />
           <nike-select
             :options="profileList"
@@ -112,10 +78,9 @@
           ></nike-select>
           <input
             class="border border-nike-border bg-nike-darkest rounded-lg h-10 w-full py-2 px-3 text-grey m-3"
-            id="providerUsername"
             type="text"
-            placeholder="Username"
-            v-model="profileSettings.username"
+            placeholder="Token"
+            v-model="profileSettings.token"
           />
           <div class="flex justify-center m-3">
             <button
@@ -139,10 +104,10 @@
           ></nike-select>
           <input
             class="border border-nike-border bg-nike-darkest rounded-lg h-10 w-full py-2 px-3 text-grey m-3"
-            id="smsTier"
+            id="providerUsername"
             type="text"
-            placeholder="Tier (Cloud sms)"
-            v-model="profileSettings.tier"
+            placeholder="Username"
+            v-model="profileSettings.username"
           />
         </div>
       </div>
@@ -235,10 +200,6 @@ export default {
       this.defaultSettings.proxyGroup = payload;
     },
 
-    onAttemptCountSelect(payload) {
-      this.defaultSettings.attemptCount = payload;
-    },
-
     onSmsProviderSelect(payload) {
       this.profileSettings.provider = payload;
       this.profileSettings.country = null;
@@ -284,10 +245,6 @@ export default {
       this.defaultSettings = {
         discord:
           "https://discordapp.com/api/webhooks/595354326764093481/CBpbGk-oJb9UXM-NGYE5HaLrYIxkpchqk19I19AGmsXwHO5v_oWkea3LTVdAUtVJ0cd-",
-        typingSpeed: 3,
-        threadCount: 2,
-        automationDelay: 10,
-        attemptCount: "",
         proxyGroup: ""
       };
     },
@@ -302,18 +259,18 @@ export default {
     },
     uninstallLicense() {
       window
-          .fetch("http://localhost:5000/activate/uninstall", {
-            method: "POST",
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.status) {
-              alert("Successfully uninstalled !");
-            }
-          }) // JSON-string from `response.json()` call
-          .catch(error => {
-            alert("Sorry, error occured !");
-          });
+        .fetch("http://localhost:5000/activate/uninstall", {
+          method: "POST"
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status) {
+            alert("Successfully uninstalled !");
+          }
+        }) // JSON-string from `response.json()` call
+        .catch(error => {
+          alert("Sorry, error occured !");
+        });
     }
   }
 };
