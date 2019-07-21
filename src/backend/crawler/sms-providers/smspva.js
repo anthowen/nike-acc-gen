@@ -9,7 +9,7 @@ const prices = {
 let respTxt = "API KEY Incorrect";
 
 const errorCodes = {
-  2: "numbers are already taken, try to get a number again in 60 seconds. ",
+  2: "Numbers are already taken, try to get a number again in 60 seconds. ",
   5: " You have exceeded the number of requests per minute",
   6: "You will be banned for 10 minutes, because scored negative karma",
   7: "You have exceeded the number of concurrent streams. SMS Wait from previous orders"
@@ -109,8 +109,10 @@ const doProcess = async (
 
       if (e.action.includes("get_sms")) {
         errorCallback("SMS hasn't found yet");
+      } else if (e.action.includes("get_number")) {
+        errorCallback("Low balance");
       } else {
-        errorCallback(errorCodes[e.code]);
+        errorCallback(errorCodes[parseInt(e.code)]);
       }
     } else if (e instanceof Error) errorCallback(e.message);
     else errorCallback(e.message);

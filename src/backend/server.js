@@ -7,7 +7,7 @@
   const bodyParser = require("body-parser");
   const cors = require("cors");
   const { Cluster } = require("puppeteer-cluster");
-  const activateRouter = require("./backend/activate");
+  const activateRouter = require("./activate");
 
   const createAccountBot = require("./crawler/create-bot");
   const verifyAccountBot = require("./crawler/verify-bot");
@@ -118,7 +118,7 @@
     }
   });
 
-  // Back end point for creating accounts
+  // Endpoint for creating accounts
   app.post("/create", function(req, res) {
     if (clientList && clientList.length) {
       try {
@@ -142,7 +142,7 @@
     }
   });
 
-  // Back end point for verifying accounts
+  // Endpoint for verifying accounts
   app.post("/verify", function(req, res) {
     if (clientList && clientList.length) {
       try {
@@ -166,6 +166,7 @@
     }
   });
 
+  // Endpoint for testing proxy
   app.post("/test-proxy", (req, res) => {
     var proxy = req.body.proxy;
     var tableIndex = req.body.tableIndex;

@@ -233,6 +233,8 @@ let doVerify = async (page, io, proxy, user, sms) => {
       errMessage = "Failed to get SMS";
     } else if (e.message.includes("No free channels")) {
       errMessage = "Phone not available";
+    } else if (e.message.includes("balance")) {
+      errMessage = e.message;
     }
 
     io.sockets.emit("VerifyLog", {

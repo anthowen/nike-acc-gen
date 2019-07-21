@@ -6,7 +6,7 @@ import {
   installVueDevtools
 } from "vue-cli-plugin-electron-builder/lib";
 // eslint-disable-next-line no-unused-vars
-import server from "./server.js";
+import server from "./backend/server.js";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 

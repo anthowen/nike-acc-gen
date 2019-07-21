@@ -147,6 +147,26 @@
         </div>
       </div>
     </div>
+
+    <div class="mt-4">
+      <h3 class="text-white">License Settings</h3>
+      <p class="text-grey header-description">This setting will be used to manage license</p>
+
+      <div class="flex w-full pl-2 pr-2">
+        <div class="flex-1 px-4 py-2 m-2"></div>
+
+        <div class="flex-1 px-4 py-2 m-2">
+          <div class="flex justify-center m-3">
+            <button
+              class="ml-8 mr-4 px-10 py-2 order-solid border-2 border-nike-green text-white text-lg rounded-lg"
+              @click="uninstallLicense"
+            >Deactivate</button>
+          </div>
+        </div>
+
+        <div class="flex-1 px-4 py-2 m-2"></div>
+      </div>
+    </div>
   </div>
 </template>
 <script>
@@ -279,6 +299,21 @@ export default {
         "REMOVE_FROM_PROFILE_LIST",
         this.profileSettings.profile
       );
+    },
+    uninstallLicense() {
+      window
+          .fetch("http://localhost:5000/activate/uninstall", {
+            method: "POST",
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.status) {
+              alert("Successfully uninstalled !");
+            }
+          }) // JSON-string from `response.json()` call
+          .catch(error => {
+            alert("Sorry, error occured !");
+          });
     }
   }
 };
