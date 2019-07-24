@@ -64,7 +64,7 @@
   // Puppeteer Cluster
   const cluster = await Cluster.launch({
     concurrency: Cluster.CONCURRENCY_CONTEXT,
-    maxConcurrency: 2,
+    maxConcurrency: 5,
     timeout: 160000,
     puppeteerOptions: {
       // headless: false,

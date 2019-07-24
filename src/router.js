@@ -39,6 +39,11 @@ export default new Router({
       name: "proxies",
       component: () =>
         import(/* webpackChunkName: "play" */ "./views/Proxies.vue")
+    },
+    {
+      path: "/logs",
+      name: "logs",
+      component: () => import(/* webpackChunkName: "play" */ "./views/Logs.vue")
     }
     // {
     //   path: "/categories",

@@ -42,15 +42,15 @@
 
         <div class="button-group flex justify-between">
           <button
-            class="mx-5 px-10 py-2 order-solid border-2 border-nike-green text-white text-lg rounded-lg"
+            class="mx-5 px-10 py-2 order-solid border-2 border-nike-green text-white text-lg rounded-lg raise"
             @click="saveGroup"
           >Save</button>
           <button
-            class="mx-5 px-10 py-2 order-solid border-2 border-nike-red text-white text-lg rounded-lg"
+            class="mx-5 px-10 py-2 order-solid border-2 border-nike-red text-white text-lg rounded-lg raise"
             @click="clearGroup"
           >Clear</button>
           <button
-            class="mx-5 px-10 py-2 order-solid border-2 border-nike-yellow text-white text-lg rounded-lg"
+            class="mx-5 px-10 py-2 order-solid border-2 border-nike-yellow text-white text-lg rounded-lg raise"
             @click="newGroup"
           >New</button>
         </div>

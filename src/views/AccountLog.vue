@@ -136,29 +136,31 @@ export default {
       const queue = new TaskQueue(Promise, MAX_SIMULTANEOUS_DOWNLOADS);
 
       const results = await Promise.all(
-        this.tableData.map((item, index) => {
-          if (item.status.code === 6) return;
-          this.checkUniqueness(
-            // {
-            //   url: "35.246.246.24:3128"
-            // },
-            null,
-            {
-              tableIndex: index,
-              email: item.email,
-              password: item.password,
-              country: item.country,
-              // gender: item.gender,
-              firstName: item.first_name,
-              lastName: item.last_name
-            },
-            {
-              provider: profileSettings.provider.name,
-              username: profileSettings.username,
-              token: profileSettings.token
-            }
-          );
-        })
+        this.tableData.map(
+          queue.wrap(async (item, index) => {
+            if (item.status.code === 6) return;
+            this.checkUniqueness(
+              // {
+              //   url: "35.246.246.24:3128"
+              // },
+              null,
+              {
+                tableIndex: index,
+                email: item.email,
+                password: item.password,
+                country: item.country,
+                // gender: item.gender,
+                firstName: item.first_name,
+                lastName: item.last_name
+              },
+              {
+                provider: profileSettings.provider.name,
+                username: profileSettings.username,
+                token: profileSettings.token
+              }
+            );
+          })
+        )
       ).then(responses => {
         // ...
         console.log("reponses.leng = " + responses.length);
