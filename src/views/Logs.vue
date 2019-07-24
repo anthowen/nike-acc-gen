@@ -64,6 +64,10 @@ export default {
 
 <style lang="scss" scoped>
 .logs {
+    height: 73vh;
+    overflow-y:scroll;
+    overflow-x:auto;
+    padding-right: 10px;
   ul {
     li {
       list-style-type: none;
