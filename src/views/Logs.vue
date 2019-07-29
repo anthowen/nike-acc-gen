@@ -4,89 +4,108 @@
     <p
       class="text-grey header-description"
     >This page shows logs status of creating and verification of accounts.</p>
-    <div class="mt-8 logs">
-      <ul>
-        <li v-for="item in logs" :key="item.id">
-          <div class="flex log-line">
-            <span class="message">{{ item.message }}</span>
-            <span class="time">{{ item.time }}</span>
-          </div>
-        </li>
-      </ul>
+
+    <log-table
+      class="mt-5"
+      :tName="'applicationLogTable'"
+      :tConfig="logTableConfig"
+      :tData="logData"
+      :tHeight="90"
+      :key="logTableKey"
+    ></log-table>
+
+    <div class="button-group text-center px-16">
+      <button
+        class="ml-8 mr-4 px-10 py-2 order-solid border-2 border-nike-green text-white text-lg rounded-lg raise"
+        @click="exportLogs"
+      >Export</button>
+      <button
+        class="mx-2 px-10 py-2 order-solid border-2 border-nike-red text-white text-lg rounded-lg raise"
+        @click="clearLogs"
+      >Clear</button>
     </div>
   </div>
 </template>
 
 <script>
+import LogTable from "../components/LogTable.vue";
 export default {
+  mounted() {
+    this.$nextTick(function() {
+      console.log("Logs page component did mount");
+      this.logData = [];
+      this.$store.getters.appLogs.every(log => this.logData.push(log));
+    });
+  },
+  components: {
+    LogTable
+  },
   sockets: {
     CreateLog(data) {
-      this.addLogHistory(typeof data === "string" ? data : data.message);
+      this.addLogHistory(
+        typeof data === "string" ? data : data.message,
+        "CreateLog",
+        typeof data === "string" ? 0 : data.index + 1
+      );
     },
     VerifyLog(data) {
-      this.addLogHistory(typeof data === "string" ? data : data.message);
+      this.addLogHistory(
+        typeof data === "string" ? data : data.message,
+        "VerifyLog",
+        typeof data === "string" ? 0 : data.index + 1
+      );
     },
     ProxyStatus(data) {
-      this.addLogHistory(typeof data === "string" ? data : data.message);
+      this.addLogHistory(
+        typeof data === "string" ? data : data.message,
+        "ProxyStatus",
+        typeof data === "string" ? 0 : data.index + 1
+      );
+    },
+
+    ApplicationLog(data) {
+      console.log("catchted in Log.vue", data);
+      //   this.addLogHistory(typeof data === "string" ? data : data.message);
+      //   this.$emit("scrollToBottom", "applicationLogTable");
     }
   },
   methods: {
-    addLogHistory(message) {
-      this.logs.push({
+    addLogHistory(message, tag, index) {
+      this.logData.push({
         message: message,
+        type: tag + (!index ? "" : " #" + index),
         time: new Date().toLocaleString()
       });
-    }
+      this.forceRerenderLogTable();
+    },
+    forceRerenderLogTable() {
+      this.logTableKey += 1;
+    },
+    clearLogs() {
+      this.logData = [];
+      this.$store.commit("EMPTY_APPLICATION_LOGS");
+      this.forceRerenderLogTable();
+    },
+    exportLogs() {}
   },
   data: function() {
     return {
-      logs: [
-        {
-          message:
-            "A UK account created, email is garry.balack21@gmail.com, with password '#2daidfj#5!'",
-          time: "2019-07-24 11:50:00 AM"
-        },
-        {
-          message:
-            "A US account created, email is john.black21@gmail.com, with password '#2daidfj#5!'",
-          time: "2019-07-24 11:50:00 AM"
-        },
-        {
-          message:
-            "A Chinese account created, email is rui.hua607@gmail.com, with password '#2daidfj#5!'",
-          time: "2019-07-24 11:50:00 AM"
-        }
-      ]
+      logTableKey: 0,
+      logTableConfig: [
+        { prop: "_index", name: "ID" },
+        { prop: "message", name: "Message" },
+        { prop: "type", name: "Type" },
+        { prop: "time", name: "Time" }
+      ],
+      logData: this.$store.getters.appLogs
     };
   }
 };
 </script>
 
 <style lang="scss" scoped>
-.logs {
-    height: 73vh;
-    overflow-y:scroll;
-    overflow-x:auto;
-    padding-right: 10px;
-  ul {
-    li {
-      list-style-type: none;
-      border-bottom: 1px solid #1b1b1b;
-      padding: 10px 5px;
-
-      .log-line {
-        justify-content: space-between;
-        align-items: flex-end;
-
-        .message {
-          color: #71fc98;
-        }
-
-        .time {
-          color: #8564a9;
-        }
-      }
-    }
-  }
+.logs-list {
+  height: 73vh;
+  padding-right: 10px;
 }
 </style>

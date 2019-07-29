@@ -27,11 +27,21 @@ const storedSubmit = '#nike-unite-progressiveForm > div > input[type="button"]';
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 let doVerify = async (page, io, proxy, user, sms) => {
-  if (proxy && proxy.user && proxy.pass) {
+  // await page.authenticate({
+  //   username: "proxy189960",
+  //   password: "vNm1Q1Oh"
+  // });
+
+  if (proxy) {
     console.log("authenticating proxy user/pass");
+    const elements = proxy.split(":");
+    if (!elements || elements.length !== 2) {
+      throw new Error("Proxy password is not in valid format");
+    }
+
     await page.authenticate({
-      username: proxy.user,
-      password: proxy.pass
+      username: elements[0],
+      password: elements[1]
     });
   }
 

@@ -121,9 +121,11 @@ export default {
     forceRerenderProxyTable() {
       this.proxyTableKey += 1;
     },
+
     forceRerenderProxyGroupTable() {
       this.proxyGroupTableKey += 1;
     },
+
     saveProxies() {
       // let setting = this.$store.getters.accountSettings;
       const groupNames = Object.getOwnPropertyNames(this.groupData);
@@ -140,10 +142,12 @@ export default {
       this.forceRerenderProxyGroupTable();
       this.$store.commit("SET_PROXY_LIST", this.proxyData);
     },
+
     clearProxies() {
       this.proxyData.length = 0;
       this.forceRerenderProxyTable();
     },
+
     addProxies() {
       if (window.FileReader) {
         // FileReader are supported.
@@ -159,6 +163,7 @@ export default {
         alert("FileReader are not supported in this browser.");
       }
     },
+
     async onLoadProxyFile(event) {
       var contents = event.target.result;
       var proxyList = contents.split(/\r\n|\r|\n/g);

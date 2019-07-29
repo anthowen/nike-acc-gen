@@ -15,7 +15,7 @@
             placeholder="Discord Webhook"
           />
           <button
-            class="test-discord-webhook absolute px-4 py-1 order-solid border-2 border-nike-green text-white text-lg rounded-lg bg-nike-darkest"
+            class="test-discord-webhook absolute px-4 py-1 order-solid border-2 border-nike-green text-white text-lg rounded-lg bg-nike-darkest raise"
             @click="testDiscordWebhook"
           >Test</button>
         </div>
@@ -33,11 +33,11 @@
         <div class="flex-1 px-4 py-2 m-2">
           <div class="flex justify-center m-3">
             <button
-              class="ml-8 mr-4 px-10 py-2 order-solid border-2 border-nike-green text-white text-lg rounded-lg"
+              class="ml-8 mr-4 px-10 py-2 order-solid border-2 border-nike-green text-white text-lg rounded-lg raise"
               @click="saveDefaultSettings"
             >Save</button>
             <button
-              class="mx-2 px-10 py-2 order-solid border-2 border-nike-red text-white text-lg rounded-lg"
+              class="mx-2 px-10 py-2 order-solid border-2 border-nike-red text-white text-lg rounded-lg raise"
               @click="resetDefaultSettings"
             >Reset</button>
           </div>
@@ -84,11 +84,11 @@
           />
           <div class="flex justify-center m-3">
             <button
-              class="ml-8 mr-4 px-10 py-2 order-solid border-2 border-nike-green text-white text-lg rounded-lg"
+              class="ml-8 mr-4 px-10 py-2 order-solid border-2 border-nike-green text-white text-lg rounded-lg raise"
               @click="saveProfileSettings"
             >Save</button>
             <button
-              class="mx-2 px-10 py-2 order-solid border-2 border-nike-red text-white text-lg rounded-lg"
+              class="mx-2 px-10 py-2 order-solid border-2 border-nike-red text-white text-lg rounded-lg raise"
               @click="deleteProfileSettings"
             >Delete</button>
           </div>
@@ -123,7 +123,7 @@
         <div class="flex-1 px-4 py-2 m-2">
           <div class="flex justify-center m-3">
             <button
-              class="ml-8 mr-4 px-10 py-2 order-solid border-2 border-nike-green text-white text-lg rounded-lg"
+              class="ml-8 mr-4 px-10 py-2 order-solid border-2 border-nike-green text-white text-lg rounded-lg raise"
               @click="uninstallLicense"
             >Deactivate</button>
           </div>

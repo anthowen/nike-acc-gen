@@ -21,11 +21,16 @@ function sleep(ms) {
 }
 
 let doCreate = async (page, io, proxy, user) => {
-  if (proxy && proxy.user && proxy.pass) {
+  if (proxy) {
     console.log("authenticating proxy user/pass");
+    const elements = proxy.split(":");
+    if (!elements || elements.length !== 2) {
+      throw new Error("Proxy password is not in valid format");
+    }
+
     await page.authenticate({
-      username: proxy.user,
-      password: proxy.pass
+      username: elements[0],
+      password: elements[1]
     });
   }
 

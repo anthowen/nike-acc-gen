@@ -5,23 +5,29 @@
       class="text-grey header-description"
     >This tab shows the status of the making of your Nike accounts</p>
 
-    <log-table class="mt-5" :tConfig="tableConfig" :tData="tableData" :tHeight="90"></log-table>
+    <log-table
+      class="mt-5"
+      :tConfig="tableConfig"
+      :tData="tableData"
+      :tHeight="90"
+      :key="accountLogTableKey"
+    ></log-table>
     <div class="button-group text-center px-16">
       <button
-        class="float-left px-10 py-2 order-solid border-2 border-nike-yellow text-white text-lg rounded-lg"
+        class="float-left px-10 py-2 order-solid border-2 border-nike-yellow text-white text-lg rounded-lg raise"
         @click="exportLog"
       >Export</button>
       <button
-        class="mx-2 px-10 py-2 order-solid border-2 border-nike-green text-white text-lg rounded-lg"
+        class="mx-2 px-10 py-2 order-solid border-2 border-nike-green text-white text-lg rounded-lg raise"
         @click="startCreatingAccount"
       >Start</button>
       <button
-        class="mx-2 px-10 py-2 order-solid border-2 border-nike-red text-white text-lg rounded-lg"
+        class="mx-2 px-10 py-2 order-solid border-2 border-nike-red text-white text-lg rounded-lg raise"
         @click="stopCreatingAccount"
       >Stop</button>
 
       <button
-        class="float-right px-10 py-2 order-solid border-2 border-nike-red text-white text-lg rounded-lg"
+        class="float-right px-10 py-2 order-solid border-2 border-nike-red text-white text-lg rounded-lg raise"
         @click="clearLog"
       >Clear</button>
     </div>
@@ -85,6 +91,7 @@ export default {
   },
   data: function() {
     return {
+      accountLogTableKey: 0,
       tableConfig: [
         { prop: "_index", name: "ID" },
         { prop: "first_name", name: "First Name" },
@@ -100,10 +107,14 @@ export default {
     };
   },
   methods: {
+    forceRerenderAccountLogTable() {
+      this.accountLogTableKey += 1;
+    },
     exportLog() {},
     clearLog() {
       this.tableData = [];
       this.$store.commit("EMPTY_PENDING_LIST");
+      this.forceRerenderAccountLogTable();
     },
     checkUniqueness(proxyInfo, userInfo, smsInfo) {
       console.log("checking uniqueness ");

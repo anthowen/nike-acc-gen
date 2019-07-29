@@ -1,5 +1,5 @@
 <template>
-  <div class="table-wrapper px-2" :style="{maxHeight: tHeight+'%'}">
+  <div class="table-wrapper px-2" ref="logDisplay" :style="{maxHeight: tHeight+'%'}">
     <div class="table w-full" :style="{maxHeight: tHeight+'%'}">
       <div class="table-row">
         <div
@@ -48,7 +48,17 @@ export default {
     tHeight: {
       type: Number,
       default: 90
+    },
+    tName: {
+      type: String,
+      default: "logTable"
     }
+  },
+  mounted() {
+    this.$on("scrollToBottom", function(tname) {
+      // ...
+      if (this.tName === tname) this.scrollToBottom();
+    });
   },
   data: function() {
     return {
@@ -65,6 +75,10 @@ export default {
     },
     del(index, row) {
       console.log(index, row);
+    },
+    scrollToBottom() {
+      const logDisplay = this.$refs.logDisplay;
+      logDisplay.scrollTop = logDisplay.scrollHeight;
     }
   }
 };

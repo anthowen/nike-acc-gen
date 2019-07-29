@@ -3,26 +3,32 @@
     <h3 class="text-white">Verification</h3>
     <p class="text-grey header-description">This tab is for verifying your Nike accounts</p>
 
-    <log-table class="mt-5" :tConfig="tableConfig" :tData="tableData" :tHeight="94"></log-table>
+    <log-table
+      class="mt-5"
+      :tConfig="tableConfig"
+      :tData="tableData"
+      :tHeight="94"
+      :key="verifyLogTableKey"
+    ></log-table>
     <div class="button-group text-center px-16">
       <button
-        class="float-left px-10 py-2 order-solid border-2 border-nike-yellow text-white text-lg rounded-lg"
+        class="float-left px-10 py-2 order-solid border-2 border-nike-yellow text-white text-lg rounded-lg raise"
         @click="exportLog"
       >Export</button>
       <button
-        class="mx-5 px-10 py-2 order-solid border-2 border-nike-green text-white text-lg rounded-lg"
+        class="mx-5 px-10 py-2 order-solid border-2 border-nike-green text-white text-lg rounded-lg raise"
         @click="startVerification"
       >Start</button>
       <button
-        class="mx-5 px-10 py-2 order-solid border-2 border-nike-red text-white text-lg rounded-lg"
+        class="mx-5 px-10 py-2 order-solid border-2 border-nike-red text-white text-lg rounded-lg raise"
         @click="stopVerification"
       >Stop</button>
       <button
-        class="mx-5 px-10 py-2 order-solid border-2 border-nike-yellow text-white text-lg rounded-lg"
+        class="mx-5 px-10 py-2 order-solid border-2 border-nike-yellow text-white text-lg rounded-lg raise"
         @click="retryFailedAccount"
       >Retry</button>
       <button
-        class="float-right px-10 py-2 order-solid border-2 border-nike-red text-white text-lg rounded-lg"
+        class="float-right px-10 py-2 order-solid border-2 border-nike-red text-white text-lg rounded-lg raise"
         @click="clearLog"
       >Clear</button>
     </div>
@@ -77,6 +83,7 @@ export default {
   },
   data: function() {
     return {
+      verifyLogTableKey: 0,
       tableConfig: [
         { prop: "_index", name: "ID" },
         { prop: "country", name: "Country" },
@@ -89,6 +96,9 @@ export default {
     };
   },
   methods: {
+    forceRerenderVerifyLogTable() {
+      this.verifyLogTableKey += 1;
+    },
     checkUniqueness(proxyInfo, userInfo, smsInfo) {
       console.log("checking uniqueness ");
       return axios
@@ -103,18 +113,65 @@ export default {
           console.log(response.data);
         });
     },
-    exportLog() {
 
-    },
+    exportLog() {},
+
     clearLog() {
-      
+      this.tableData.length = 0;
+      this.forceRerenderVerifyLogTable();
+      this.$store.commit("EMPTY_CREATED_LIST");
     },
-    startVerification() {
+
+    async sendProxies() {
+      console.log("sendproxies");
+      const selectedProxyGroup = this.$store.getters.defaultSettings.proxyGroup;
+      const proxyGroupList = this.$store.getters.proxyGroupList;
+      let proxies;
+      if (!selectedProxyGroup || !(selectedProxyGroup.name in proxyGroupList)) {
+        proxies = proxyGroupList[Object.keys(proxyGroupList)[0]];
+      } else proxies = proxyGroupList[selectedProxyGroup.name].proxies;
+
+      if (!proxies) {
+        alert("Abort. No proxies selected");
+        return;
+      }
+
+      // Choose only good proxies where status.code === 6
+      let goodProxies = proxies.filter(proxy => proxy.status.code === 6);
+
+      console.log(goodProxies);
+
+      // Get default password
+      const proxyPwd = goodProxies[0].proxy
+        .split(":")
+        .slice(2, 4)
+        .join(":");
+
+      // Get Proxy Ip address and port
+      goodProxies = goodProxies.map(item => {
+        const elements = item.proxy.split(":");
+        return elements[0] + ":" + elements[1];
+      });
+
+      await axios
+        .post("http://localhost:5000/set-proxy", {
+          proxies: goodProxies,
+          proxyPwd: proxyPwd
+        })
+        .then(response => {
+          console.log("set-proxy request response:" + response.data.unique);
+          console.log(response.data);
+        });
+    },
+
+    async startVerification() {
       const profileSettings = this.$store.getters.profileSettings;
       if (!profileSettings.profile || !profileSettings.profile.name) {
         alert("Please select proper profile on Settings");
         return;
       }
+
+      await this.sendProxies();
 
       for (var i = 0; i < this.tableData.length; i++) {
         this.checkUniqueness(

@@ -147,15 +147,15 @@
     <div class="button-group text-center px-16">
 
         <button
-          class="mx-5 px-10 py-2 order-solid border-2 border-nike-green text-white text-lg rounded-lg"
+          class="mx-5 px-10 py-2 order-solid border-2 border-nike-green text-white text-lg rounded-lg raise"
           @click="saveSettings"
         >Save</button>
         <button
-          class="mx-5 px-10 py-2 order-solid border-2 border-nike-red text-white text-lg rounded-lg"
+          class="mx-5 px-10 py-2 order-solid border-2 border-nike-red text-white text-lg rounded-lg raise"
           @click="resetSettings"
         >Reset</button>
         <button
-          class="float-right mx-5 px-10 py-2 order-solid border-2 border-nike-yellow text-white text-lg rounded-lg"
+          class="float-right mx-5 px-10 py-2 order-solid border-2 border-nike-yellow text-white text-lg rounded-lg raise"
         >Create</button>
 
     </div>

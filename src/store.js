@@ -7,11 +7,6 @@ const {
 } = require("electron");
 import path from "path";
 import { promisify } from "util";
-// import VuexPersist from "vuex-persistfile";
-
-// const persist = new VuexPersist({
-//   path: "settings"
-// });
 
 // This is for Vuex Store save & load when it runs up and down
 storage.setDataPath(path.join(app.getPath("userData"), "settings"));
@@ -69,6 +64,8 @@ export default new Vuex.Store({
       name: "Profile1",
       profile: ""
     },
+
+    appLogs: [],
 
     defaultSettings: {
       discord:
@@ -131,6 +128,9 @@ export default new Vuex.Store({
     },
     proxyGroupList: state => {
       return state.proxyGroupList;
+    },
+    appLogs: state => {
+      return state.appLogs;
     }
   },
   mutations: {
@@ -168,6 +168,18 @@ export default new Vuex.Store({
     EMPTY_PENDING_LIST: state => {
       console.log("committing EMPTY_PENDING_LIST");
       state.pendingList = [];
+    },
+
+    // Used @VerifyLog Page
+    EMPTY_CREATED_LIST: state => {
+      console.log("committing EMPTY_CREATED_LIST");
+      state.createdList = [];
+    },
+
+    // Used @Logs Page
+    EMPTY_APPLICATION_LOGS: state => {
+      console.log("committing EMPTY_APPLICATION_LOGS");
+      state.appLogs = [];
     },
 
     // Used @AccountLog Page for Verify Page
@@ -269,6 +281,16 @@ export default new Vuex.Store({
           state.accountProfiles[state.profileList[index]]
         );
       }
+    },
+
+    // Store Logs to Vuex
+    STORE_APP_LOGS: (state, payload) => {
+      state.appLogs = Vue._.cloneDeep(payload);
+    },
+
+    // Push new log
+    ADD_TO_APP_LOGS: (state, payload) => {
+      state.appLogs.push(payload);
     },
 
     UpdateProfileList(state) {

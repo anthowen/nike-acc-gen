@@ -33,6 +33,28 @@
     credentials: true
   };
 
+  /*
+  Overriding console.log, save to file
+  */
+
+  const fs = require("fs");
+  const util = require("util");
+  const logFile = fs.createWriteStream("log.txt", { flags: "a" });
+  // Or 'w' to truncate the file every time the process starts.
+  // const logStdout = process.stdout;
+  const originalLog = console.log;
+
+  let flagAbc = 3;
+
+  console.log = (msg, ...params) => {
+    originalLog(msg, ...params);
+
+    logFile.write(msg + ", " + params.join(", ") + "\n");
+    // logStdout.write(util.format.apply(null, arguments) + "\n");
+
+    io.sockets.emit("ApplicationLog", msg, ...params);
+  };
+
   let clientList = new Array();
 
   // var publicPath = path.resolve(__dirname, "./public");
@@ -62,29 +84,57 @@
   app.use("/activate", activateRouter);
 
   // Puppeteer Cluster
-  const cluster = await Cluster.launch({
-    concurrency: Cluster.CONCURRENCY_CONTEXT,
-    maxConcurrency: 5,
-    timeout: 160000,
-    puppeteerOptions: {
-      // headless: false,
-      // slowMo: 100,
-      // headless: true,
-      args: [
-        "--fast-start",
-        "--disable-extensions",
-        "--no-sandbox"
-        // "--proxy-server=69.171.219.132:14888:proxy187292:8AWdkQpW"
-      ],
-      ignoreHTTPSErrors: true,
-      executablePath:
-        process.env.NODE_ENV === "production"
-          ? "./chrome-win/chrome.exe"
-          : "./node_modules/puppeteer/.local-chromium/win64-672088/chrome-win/chrome.exe"
-    }
-  });
 
-  await cluster.task(async ({ page, data: pack }) => {
+  const browserArgs = [
+    "--disable-infobars",
+    "--window-position=0,0",
+    "--ignore-certifcate-errors",
+    "--ignore-certifcate-errors-spki-list",
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-accelerated-2d-canvas",
+    "--disable-gpu",
+    "--window-size=1920x1080",
+    "--hide-scrollbars"
+  ];
+
+  // each new call to workerInstance() will
+  // left pop() one element from this list
+  let cluster;
+  let proxyPassword = "proxy189960:vNm1Q1Oh";
+  // maxConcurrency should be equal to perBrowserOptions.length
+  const initPuppeteerClusterWithProxy = async proxies => {
+    let perBrowserOptions = [];
+    proxies.forEach(proxy => {
+      perBrowserOptions.push({
+        headless: true,
+        ignoreHTTPSErrors: true,
+        args: browserArgs.concat(["--proxy-server=http://" + proxy])
+      });
+      console.log("proxy", proxy);
+    });
+
+    cluster = await Cluster.launch({
+      // monitor: true,
+      timeout: 160000,
+      concurrency: Cluster.CONCURRENCY_BROWSER,
+      maxConcurrency: 4,
+      puppeteerOptions: {
+        // headless: false,
+        // args: browserArgs.concat(["38.87.150.199:14888"]),
+        // slowMo: 100,
+        // ignoreHTTPSErrors: true,
+        executablePath:
+          process.env.NODE_ENV === "production"
+            ? "./chrome-win/chrome.exe"
+            : "./node_modules/puppeteer/.local-chromium/win64-672088/chrome-win/chrome.exe"
+      },
+      perBrowserOptions: perBrowserOptions.slice(0, 4)
+    });
+  };
+
+  const clusterTaskFunction = async ({ page, data: pack }) => {
     var proxy = pack.body.proxy;
     var user = pack.body.user;
     var sms = pack.body.sms;
@@ -92,10 +142,10 @@
     try {
       if (pack.mode === "create") {
         if (user.country === "China")
-          await chineseAccountBot.doCreate(page, io, proxy, user, sms);
-        else await createAccountBot.doCreate(page, io, proxy, user);
+          await chineseAccountBot.doCreate(page, io, proxyPassword, user, sms);
+        else await createAccountBot.doCreate(page, io, proxyPassword, user);
       } else if (pack.mode === "verify") {
-        await verifyAccountBot.doVerify(page, io, proxy, user, sms);
+        await verifyAccountBot.doVerify(page, io, proxyPassword, user, sms);
       }
     } catch (e) {
       console.log("Error from axios cluster.task");
@@ -107,7 +157,7 @@
       if (e.message.includes("ERR_NO_SUPPORTED_PROXIES")) {
         message += ": Proxy";
       } else if (e.message.includes("")) {
-        message += ": ";
+        message += ": " + e.message.slice(0, 7);
       }
 
       io.sockets.emit(emitTag, {
@@ -116,9 +166,13 @@
         message: message
       });
     }
-  });
+  };
 
+  // await initPuppeteerClusterWithProxy([]);
+  // await cluster.task(clusterTaskFunction);
+  // console.log("cluster", cluster);
   // Endpoint for creating accounts
+
   app.post("/create", function(req, res) {
     if (clientList && clientList.length) {
       try {
@@ -127,10 +181,10 @@
           mode: "create"
         });
       } catch (err) {
-        res.end("Error: " + err.message);
+        return res.end("Error: " + err.message);
       }
 
-      res.json({
+      return res.json({
         status: true,
         message: "Create account requested"
       });
@@ -144,6 +198,7 @@
 
   // Endpoint for verifying accounts
   app.post("/verify", function(req, res) {
+    console.log("flagABC", flagAbc);
     if (clientList && clientList.length) {
       try {
         cluster.execute({
@@ -151,7 +206,7 @@
           mode: "verify"
         });
       } catch (err) {
-        res.end("Error: " + err.message);
+        return res.end("Error: " + err.message);
       }
 
       res.json({
@@ -214,6 +269,38 @@
         message: "no socket has connected"
       });
     }
+  });
+
+  app.post("/set-proxy", async (req, res) => {
+    console.log("flagABC", flagAbc);
+    flagAbc += 1;
+    const proxies = req.body.proxies;
+    proxyPassword = req.body.proxyPwd;
+
+    try {
+      // await cluster.close();
+      await initPuppeteerClusterWithProxy(proxies);
+      await cluster.task(clusterTaskFunction);
+      // In case of problems, log them
+      cluster.on("taskerror", (err, data) => {
+        console.log(`DEBUG - Error with cluster ${data}: ${err.message}`);
+      });
+    } catch (e) {
+      console.log("crreating cluster error", e);
+    }
+
+    if (!cluster) {
+      console.log("/set-proxy", "cluster null");
+      return res.json({
+        status: false,
+        message: "set proxies done"
+      });
+    }
+
+    return res.json({
+      status: true,
+      message: "set proxies done"
+    });
   });
 
   app.get("/clients", (req, res) => {

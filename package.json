@@ -2,7 +2,16 @@
   "name": "nike-acc-gen",
   "version": "0.1.0",
   "author": "webtal blizzard <webtal.blizzard@gmail.com>",
-  "keywords": ["vue", "vuex", "electron", "puppeteer", "nodejs", "cheerio", "socket-io", "express"],
+  "keywords": [
+    "vue",
+    "vuex",
+    "electron",
+    "puppeteer",
+    "nodejs",
+    "cheerio",
+    "socket-io",
+    "express"
+  ],
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -29,6 +38,7 @@
     "socket.io": "^2.2.0",
     "socket.io-client": "^2.2.0",
     "username": "^5.1.0",
+    "util": "^0.12.1",
     "uws": "^100.0.1",
     "vue": "^2.6.10",
     "vue-flickity": "^1.1.2",

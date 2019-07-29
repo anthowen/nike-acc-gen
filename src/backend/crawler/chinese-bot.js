@@ -38,13 +38,16 @@ const submitEmail = 'input[type="button"]';
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 const doCreate = async (page, io, proxy, user, sms) => {
-  if (proxy && proxy.user && proxy.pass) {
+  if (proxy) {
     console.log("authenticating proxy user/pass");
+    const elements = proxy.split(":");
+    if (!elements || elements.length !== 2) {
+      throw new Error("Proxy password is not in valid format");
+    }
+
     await page.authenticate({
-      username: proxy.user,
-      password: proxy.pass
-      // username: "proxy187292",
-      // password: "8AWdkQpW"
+      username: elements[0],
+      password: elements[1]
     });
   }
 
