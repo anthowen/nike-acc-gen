@@ -130,6 +130,27 @@ export default {
           console.log(response.data);
         });
     },
+
+    getProxies() {
+      const selectedProxyGroup = this.$store.getters.defaultSettings.proxyGroup;
+      const proxyGroupList = this.$store.getters.proxyGroupList;
+
+      let proxies;
+      if (!selectedProxyGroup || !(selectedProxyGroup.name in proxyGroupList)) {
+        proxies = proxyGroupList[Object.keys(proxyGroupList)[0]];
+      } else proxies = proxyGroupList[selectedProxyGroup.name].proxies;
+
+      if (!proxies) {
+        alert("Abort. No proxies selected");
+        return;
+      }
+
+      // Choose only good proxies where status.code === 6
+      return proxies
+        .filter(proxy => proxy.status.code === 6)
+        .map(item => item.proxy);
+    },
+
     async startCreatingAccount() {
       console.log("startCreatingAccount");
       this.$socket.emit("join", {
@@ -141,44 +162,30 @@ export default {
         alert("Please select proper profile on Settings");
         return;
       }
-      // a concurrency parameter of 1 makes all api requests secuential
-      const MAX_SIMULTANEOUS_DOWNLOADS = 2;
-      // init your manager.
-      const queue = new TaskQueue(Promise, MAX_SIMULTANEOUS_DOWNLOADS);
 
-      const results = await Promise.all(
-        this.tableData.map(
-          queue.wrap(async (item, index) => {
-            if (item.status.code === 6) return;
-            this.checkUniqueness(
-              // {
-              //   url: "35.246.246.24:3128"
-              // },
-              null,
-              {
-                tableIndex: index,
-                email: item.email,
-                password: item.password,
-                country: item.country,
-                // gender: item.gender,
-                firstName: item.first_name,
-                lastName: item.last_name
-              },
-              {
-                provider: profileSettings.provider.name,
-                username: profileSettings.username,
-                token: profileSettings.token
-              }
-            );
-          })
-        )
-      ).then(responses => {
-        // ...
-        console.log("reponses.leng = " + responses.length);
-      });
-
-      console.log(queue);
-      console.log(results);
+      axios
+        .post("http://localhost:5000/create", {
+          proxies: this.getProxies(),
+          users: this.tableData.map((item, index) => {
+            return {
+              tableIndex: index,
+              email: item.email,
+              password: item.password,
+              country: item.country,
+              // gender: item.gender,
+              firstName: item.first_name,
+              lastName: item.last_name
+            };
+          }),
+          sms: {
+            provider: profileSettings.provider.name,
+            username: profileSettings.username,
+            token: profileSettings.token
+          }
+        })
+        .then(response => {
+          console.log("server response:" + response.data);
+        });
     },
     async stopCreatingAccount() {}
   }

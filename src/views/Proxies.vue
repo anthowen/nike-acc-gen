@@ -218,6 +218,7 @@ export default {
       this.$store.commit("SET_PROXY_GROUP_LIST", this.groupData);
     },
     clearGroup() {
+      Object.keys(this.groupData).forEach(k => delete this.groupData[k]);
       this.groupData = {};
       this.forceRerenderProxyGroupTable();
     },

@@ -26,25 +26,7 @@ const storedSubmit = '#nike-unite-progressiveForm > div > input[type="button"]';
 //Create Sleep function to use in Async/Await function
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-let doVerify = async (page, io, proxy, user, sms) => {
-  // await page.authenticate({
-  //   username: "proxy189960",
-  //   password: "vNm1Q1Oh"
-  // });
-
-  if (proxy) {
-    console.log("authenticating proxy user/pass");
-    const elements = proxy.split(":");
-    if (!elements || elements.length !== 2) {
-      throw new Error("Proxy password is not in valid format");
-    }
-
-    await page.authenticate({
-      username: elements[0],
-      password: elements[1]
-    });
-  }
-
+let doVerify = async (page, io, user, sms) => {
   let country = "";
   if (user.country === "United Kingdom") country = "gb";
 
@@ -169,14 +151,34 @@ let doVerify = async (page, io, proxy, user, sms) => {
     };
 
     const numberCallback = async phoneNum => {
+      // Refine phonenumber based on country
+      if (
+        user.country === "United Kingdom" &&
+        phoneNum.startsWith("44") &&
+        phoneNum.length > 10
+      ) {
+        phoneNum = phoneNum.slice(2, phoneNum.length);
+      } else if (
+        user.country === "United States" &&
+        phoneNum.startsWith("1") &&
+        phoneNum.length > 10
+      ) {
+        phoneNum = phoneNum.slice(1, phoneNum.length);
+      }
+
       console.log("Phone number: " + phoneNum);
+
       console.log("waiting 5s");
       await page.waitFor(5000);
       console.log("waiting done");
-      await page.screenshot({ path: "screenshot.png" });
+
       await page.click(phone);
       await page.type(phone, phoneNum);
       console.log("entered phone number");
+
+      await page.screenshot({
+        path: `${user.country}_${phoneNum}_screenshot.png`
+      });
 
       io.sockets.emit("VerifyLog", {
         index: user.tableIndex,

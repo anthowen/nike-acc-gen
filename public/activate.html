@@ -86,6 +86,7 @@
       type="text/javascript"
     ></script>
     <script type="text/javascript">
+      console.log("start javascript");
       function onClickActivate() {
         var activateCode = document.getElementById("activateCode");
         if (!activateCode) {
@@ -121,7 +122,11 @@
       }
 
       function startMain() {
-        window.location.href = "http://localhost:8080/";
+        // if (!process.env.NODE_ENV) {
+        // window.__static = `file://${process.cwd()}/public/activate.html`;
+        const { ipcRenderer } = require("electron");
+
+        ipcRenderer.send("mainWindow");
       }
 
       function init() {

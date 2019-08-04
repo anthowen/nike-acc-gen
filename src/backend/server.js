@@ -6,7 +6,8 @@
   const request = require("request");
   const bodyParser = require("body-parser");
   const cors = require("cors");
-  const { Cluster } = require("puppeteer-cluster");
+  const puppeteer = require("puppeteer");
+  const TaskQueue = require("cwait").TaskQueue;
   const activateRouter = require("./activate");
 
   const createAccountBot = require("./crawler/create-bot");
@@ -15,6 +16,8 @@
 
   const socketIo = require("socket.io");
   const PORT = 5000;
+
+  global.Promise = require("bluebird");
 
   const app = express(),
     server = require("http").createServer(app);
@@ -38,7 +41,6 @@
   */
 
   const fs = require("fs");
-  const util = require("util");
   const logFile = fs.createWriteStream("log.txt", { flags: "a" });
   // Or 'w' to truncate the file every time the process starts.
   // const logStdout = process.stdout;
@@ -83,103 +85,85 @@
   app.use(cors(corsOptions));
   app.use("/activate", activateRouter);
 
-  // Puppeteer Cluster
+  const initializePuppeteer = async data => {
+    // Get Proxy Address and Proxy password
+    const proxyElements = data.proxy.split(":");
 
-  const browserArgs = [
-    "--disable-infobars",
-    "--window-position=0,0",
-    "--ignore-certifcate-errors",
-    "--ignore-certifcate-errors-spki-list",
-    "--no-sandbox",
-    "--disable-setuid-sandbox",
-    "--disable-dev-shm-usage",
-    "--disable-accelerated-2d-canvas",
-    "--disable-gpu",
-    "--window-size=1920x1080",
-    "--hide-scrollbars"
-  ];
-
-  // each new call to workerInstance() will
-  // left pop() one element from this list
-  let cluster;
-  let proxyPassword = "proxy189960:vNm1Q1Oh";
-  // maxConcurrency should be equal to perBrowserOptions.length
-  const initPuppeteerClusterWithProxy = async proxies => {
-    let perBrowserOptions = [];
-    proxies.forEach(proxy => {
-      perBrowserOptions.push({
-        headless: true,
-        ignoreHTTPSErrors: true,
-        args: browserArgs.concat(["--proxy-server=http://" + proxy])
-      });
-      console.log("proxy", proxy);
+    const browser = await puppeteer.launch({
+      // headless: false,
+      // slowMo: 100,
+      args: [
+        "--disable-infobars",
+        "--window-position=0,0",
+        "--ignore-certifcate-errors",
+        "--ignore-certifcate-errors-spki-list",
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-accelerated-2d-canvas",
+        "--disable-gpu",
+        "--window-size=1920x1080",
+        "--hide-scrollbars",
+        "--proxy-server=" + proxyElements[0] + ":" + proxyElements[1]
+      ],
+      executablePath:
+        process.env.NODE_ENV === "production"
+          ? "./chrome-win/chrome.exe"
+          : "./node_modules/puppeteer/.local-chromium/win64-672088/chrome-win/chrome.exe"
     });
 
-    cluster = await Cluster.launch({
-      // monitor: true,
-      timeout: 160000,
-      concurrency: Cluster.CONCURRENCY_BROWSER,
-      maxConcurrency: 4,
-      puppeteerOptions: {
-        // headless: false,
-        // args: browserArgs.concat(["38.87.150.199:14888"]),
-        // slowMo: 100,
-        // ignoreHTTPSErrors: true,
-        executablePath:
-          process.env.NODE_ENV === "production"
-            ? "./chrome-win/chrome.exe"
-            : "./node_modules/puppeteer/.local-chromium/win64-672088/chrome-win/chrome.exe"
-      },
-      perBrowserOptions: perBrowserOptions.slice(0, 4)
+    const context = await browser.createIncognitoBrowserContext();
+    const page = await context.newPage();
+    await page.authenticate({
+      username: proxyElements[2],
+      password: proxyElements[3]
     });
+
+    if (!data.mode) return;
+
+    console.log("initialize", data);
+
+    if (data.mode === "create") {
+      if (data.user.country === "China")
+        await chineseAccountBot.doCreate(page, io, data.user, data.sms);
+      else await createAccountBot.doCreate(page, io, data.user, data.sms);
+    } else if (data.mode === "verify") {
+      await verifyAccountBot.doVerify(page, io, data.user, data.sms);
+    }
+
+    await browser.close();
   };
 
-  const clusterTaskFunction = async ({ page, data: pack }) => {
-    var proxy = pack.body.proxy;
-    var user = pack.body.user;
-    var sms = pack.body.sms;
-
+  const runMultiPuppeteer = async data => {
     try {
-      if (pack.mode === "create") {
-        if (user.country === "China")
-          await chineseAccountBot.doCreate(page, io, proxyPassword, user, sms);
-        else await createAccountBot.doCreate(page, io, proxyPassword, user);
-      } else if (pack.mode === "verify") {
-        await verifyAccountBot.doVerify(page, io, proxyPassword, user, sms);
-      }
+      // a concurrency parameter of 1 makes all api requests secuential
+      const MAX_SIMULTANEOUS_DOWNLOADS = 4;
+      // init your manager.
+      const queue = new TaskQueue(Promise, MAX_SIMULTANEOUS_DOWNLOADS);
+
+      await Promise.map(data, queue.wrap(initializePuppeteer));
     } catch (e) {
-      console.log("Error from axios cluster.task");
-      console.log(e.message);
-
-      const emitTag = pack.mode === "create" ? "CreateLog" : "VerifyLog";
-      let message = "Error";
-
-      if (e.message.includes("ERR_NO_SUPPORTED_PROXIES")) {
-        message += ": Proxy";
-      } else if (e.message.includes("")) {
-        message += ": " + e.message.slice(0, 7);
-      }
-
-      io.sockets.emit(emitTag, {
-        index: user.tableIndex,
-        code: 3,
-        message: message
-      });
+      console.log("At runMultiPuppeteer()", e);
     }
   };
-
-  // await initPuppeteerClusterWithProxy([]);
-  // await cluster.task(clusterTaskFunction);
-  // console.log("cluster", cluster);
-  // Endpoint for creating accounts
 
   app.post("/create", function(req, res) {
     if (clientList && clientList.length) {
       try {
-        cluster.execute({
-          body: req.body,
-          mode: "create"
+        const proxies = req.body.proxies;
+        const users = req.body.users;
+        const smsInfo = req.body.sms;
+
+        const data = users.map((user, index) => {
+          return {
+            mode: "create",
+            user: user,
+            proxy: proxies[index % proxies.length],
+            sms: smsInfo
+          };
         });
+
+        runMultiPuppeteer(data);
       } catch (err) {
         return res.end("Error: " + err.message);
       }
@@ -201,10 +185,20 @@
     console.log("flagABC", flagAbc);
     if (clientList && clientList.length) {
       try {
-        cluster.execute({
-          body: req.body,
-          mode: "verify"
+        const proxies = req.body.proxies;
+        const users = req.body.users;
+        const smsInfo = req.body.sms;
+
+        const data = users.map((user, index) => {
+          return {
+            mode: "verify",
+            user: user,
+            proxy: proxies[index % proxies.length],
+            sms: smsInfo
+          };
         });
+
+        runMultiPuppeteer(data);
       } catch (err) {
         return res.end("Error: " + err.message);
       }
@@ -254,10 +248,8 @@
           });
         }
 
-        console.log("Error: ");
-        console.log(err);
-        console.log("Reponse code: ");
-        console.log(resp && resp.statusCode);
+        console.log("Error: ", err);
+        console.log("Reponse code: ", resp && resp.statusCode);
       });
       res.json({
         status: true,
@@ -269,38 +261,6 @@
         message: "no socket has connected"
       });
     }
-  });
-
-  app.post("/set-proxy", async (req, res) => {
-    console.log("flagABC", flagAbc);
-    flagAbc += 1;
-    const proxies = req.body.proxies;
-    proxyPassword = req.body.proxyPwd;
-
-    try {
-      // await cluster.close();
-      await initPuppeteerClusterWithProxy(proxies);
-      await cluster.task(clusterTaskFunction);
-      // In case of problems, log them
-      cluster.on("taskerror", (err, data) => {
-        console.log(`DEBUG - Error with cluster ${data}: ${err.message}`);
-      });
-    } catch (e) {
-      console.log("crreating cluster error", e);
-    }
-
-    if (!cluster) {
-      console.log("/set-proxy", "cluster null");
-      return res.json({
-        status: false,
-        message: "set proxies done"
-      });
-    }
-
-    return res.json({
-      status: true,
-      message: "set proxies done"
-    });
   });
 
   app.get("/clients", (req, res) => {

@@ -37,20 +37,7 @@ const submitEmail = 'input[type="button"]';
 //Create Sleep function to use in Async/Await function
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-const doCreate = async (page, io, proxy, user, sms) => {
-  if (proxy) {
-    console.log("authenticating proxy user/pass");
-    const elements = proxy.split(":");
-    if (!elements || elements.length !== 2) {
-      throw new Error("Proxy password is not in valid format");
-    }
-
-    await page.authenticate({
-      username: elements[0],
-      password: elements[1]
-    });
-  }
-
+const doCreate = async (page, io, user, sms) => {
   console.log("selected sms provider : " + sms.provider);
   let smsProvider = null;
   if (sms.provider === "pvacodes")
@@ -103,6 +90,9 @@ const doCreate = async (page, io, proxy, user, sms) => {
     };
 
     const numberCallback = async phoneNum => {
+      if (phoneNum.startsWith("86") && phoneNum.length > 10) {
+        phoneNum = phoneNum.slice(2, phoneNum.length);
+      }
       console.log("Phone number: " + phoneNum);
       console.log("waiting 5s");
       await page.waitFor(5000);

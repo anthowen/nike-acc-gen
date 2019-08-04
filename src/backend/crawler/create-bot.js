@@ -20,20 +20,7 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-let doCreate = async (page, io, proxy, user) => {
-  if (proxy) {
-    console.log("authenticating proxy user/pass");
-    const elements = proxy.split(":");
-    if (!elements || elements.length !== 2) {
-      throw new Error("Proxy password is not in valid format");
-    }
-
-    await page.authenticate({
-      username: elements[0],
-      password: elements[1]
-    });
-  }
-
+let doCreate = async (page, io, user) => {
   // page.on("console", msg => {
   //   for (let i = 0; i < msg.args().length; ++i)
   //     console.log(`Console log from page; ${i}: ${msg.args()[i]}`);

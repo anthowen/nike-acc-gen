@@ -24,14 +24,14 @@ const doProcess = async (
       domain: requestDetails.country === "US" ? "usa" : "china"
     });
 
-    // if (balanceCallback) {
-    // }
+    console.log("getsmscode requestDetails", requestDetails);
 
     await sleep(500);
     const number = await client.getNumber({
       service: "nike"
     });
-    numberCallback(number);
+
+    await numberCallback(number);
 
     await sleep(30000);
     let sms = await client.getSMS({
@@ -50,7 +50,7 @@ const doProcess = async (
     const result = parseOtpMessage(sms);
     if (result && result.code) {
       console.log("SMS received : " + result.code);
-      smsCallback(result.code);
+      await smsCallback(result.code);
     } else {
       throw new Error(sms);
     }

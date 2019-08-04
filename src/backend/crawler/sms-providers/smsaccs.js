@@ -68,7 +68,7 @@ const doProcess = async (
     await sleep(500);
     resp = await getData("get_number", "&country=" + country);
 
-    numberCallback(resp.fullNumber);
+    await numberCallback(resp.fullNumber);
     console.log("Phone number : ", resp.fullNumber);
 
     await sleep(30000);
@@ -85,7 +85,7 @@ const doProcess = async (
 
       if (result && result.code) {
         console.log("SMS received : " + result.code);
-        smsCallback(result.code);
+        await smsCallback(result.code);
       } else {
         throw new Error(resp.code);
       }

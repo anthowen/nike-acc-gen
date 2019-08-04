@@ -122,10 +122,10 @@ export default {
       this.$store.commit("EMPTY_CREATED_LIST");
     },
 
-    async sendProxies() {
-      console.log("sendproxies");
+    getProxies() {
       const selectedProxyGroup = this.$store.getters.defaultSettings.proxyGroup;
       const proxyGroupList = this.$store.getters.proxyGroupList;
+
       let proxies;
       if (!selectedProxyGroup || !(selectedProxyGroup.name in proxyGroupList)) {
         proxies = proxyGroupList[Object.keys(proxyGroupList)[0]];
@@ -137,31 +137,9 @@ export default {
       }
 
       // Choose only good proxies where status.code === 6
-      let goodProxies = proxies.filter(proxy => proxy.status.code === 6);
-
-      console.log(goodProxies);
-
-      // Get default password
-      const proxyPwd = goodProxies[0].proxy
-        .split(":")
-        .slice(2, 4)
-        .join(":");
-
-      // Get Proxy Ip address and port
-      goodProxies = goodProxies.map(item => {
-        const elements = item.proxy.split(":");
-        return elements[0] + ":" + elements[1];
-      });
-
-      await axios
-        .post("http://localhost:5000/set-proxy", {
-          proxies: goodProxies,
-          proxyPwd: proxyPwd
-        })
-        .then(response => {
-          console.log("set-proxy request response:" + response.data.unique);
-          console.log(response.data);
-        });
+      return proxies
+        .filter(proxy => proxy.status.code === 6)
+        .map(item => item.proxy);
     },
 
     async startVerification() {
@@ -171,30 +149,26 @@ export default {
         return;
       }
 
-      await this.sendProxies();
-
-      for (var i = 0; i < this.tableData.length; i++) {
-        this.checkUniqueness(
-          // {
-          //   url: "23.254.164.198:3128"
-          // },
-          null,
-          {
-            tableIndex: i,
-            country: this.tableData[i].country,
-            email: this.tableData[i].account_email,
-            password: this.tableData[i].password
-          },
-          {
+      axios
+        .post("http://localhost:5000/verify", {
+          proxies: this.getProxies(),
+          users: this.tableData.map((item, index) => {
+            return {
+              tableIndex: index,
+              country: this.tableData[index].country,
+              email: this.tableData[index].account_email,
+              password: this.tableData[index].password
+            };
+          }),
+          sms: {
             provider: profileSettings.provider.name,
             username: profileSettings.username,
             token: profileSettings.token
           }
-        ).then(response => {
-          console.log("second catch response");
-          console.log(response);
+        })
+        .then(response => {
+          console.log("server response:" + response.data);
         });
-      }
     },
     stopVerification() {},
     retryFailedAccount() {}

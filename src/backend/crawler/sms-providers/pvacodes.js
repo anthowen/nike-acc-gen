@@ -81,7 +81,7 @@ const doProcess = async (
       if (parseInt(resp.balance) < prices[country])
         throw new Error("Low balance");
       if (serviceExpired(resp.expiry_date)) throw new Error("Service expired");
-      balanceCallback(resp);
+      await balanceCallback(resp);
     }
 
     await sleep(500);
@@ -91,7 +91,7 @@ const doProcess = async (
     );
 
     if (isNaN(resp)) throw new Error(resp);
-    numberCallback(resp);
+    await numberCallback(resp);
 
     console.log("Getting Text Message: 30s wait");
     await sleep(30000);
@@ -107,7 +107,7 @@ const doProcess = async (
 
     // Example: 784549
     if (isNaN(resp)) throw new Error(resp);
-    smsCallback(resp);
+    await smsCallback(resp);
   } catch (e) {
     console.log(e);
     if (e instanceof SyntaxError) {

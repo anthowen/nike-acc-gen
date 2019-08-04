@@ -76,12 +76,12 @@ const doProcess = async (
 
       if (parseInt(resp.balance) < prices[country])
         throw new Error("Low balance");
-      balanceCallback(resp);
+      await balanceCallback(resp);
     }
 
     await sleep(500);
     resp = await getData("get_number", "&country=" + country);
-    numberCallback(resp.number);
+    await numberCallback(resp.number);
     const requestNumberId = resp.id;
 
     await sleep(30000);
@@ -98,7 +98,7 @@ const doProcess = async (
       );
     }
 
-    smsCallback(resp.sms);
+    await smsCallback(resp.sms);
   } catch (e) {
     console.log(e);
     if (e instanceof SyntaxError) {
