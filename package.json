@@ -78,28 +78,35 @@
   "build": {
     "appId": "nike-account-generator",
     "category": "automation.nike.bot",
+    "directories": {
+      "output": "build"
+    },
+    "files": [
+      "dist/electron/**/*"
+    ],
     "dmg": {
       "contents": [
         {
-          "x": 110,
-          "y": 150
-        },
-        {
-          "x": 240,
+          "x": 410,
           "y": 150,
           "type": "link",
           "path": "/Applications"
+        },
+        {
+          "x": 130,
+          "y": 150,
+          "type": "file"
         }
       ]
     },
-    "linux": {
-      "target": [
-        "AppImage",
-        "deb"
-      ]
+    "mac": {
+      "icon": "build/icons/icon.icns"
     },
     "win": {
-      "target": "NSIS"
+      "icon": "build/icons/icon.ico"
+    },
+    "linux": {
+      "icon": "build/icons"
     }
   },
   "main": "background.js"

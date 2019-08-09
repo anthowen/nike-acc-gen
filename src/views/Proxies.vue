@@ -15,6 +15,27 @@
           :key="proxyTableKey"
         ></log-table>
 
+        <!-- Modal dialgo part for showing Save Proxy Group Name dialog -->
+        <nike-modal :show="showGroupNameDlg" @close="closeGroupNameDlg">
+          <div class="modal-header">
+            <h3>Save proxies into a new group</h3>
+          </div>
+          <div class="modal-body">
+            <label class="form-label">
+              Group Name
+              <input
+                type="text"
+                v-model="newProxyGroupName"
+                rows="5"
+                class="form-control"
+              />
+            </label>
+          </div>
+          <div class="modal-footer text-right">
+            <button class="modal-default-button" @click="saveProxyGroupName()">Save</button>
+          </div>
+        </nike-modal>
+
         <div class="button-group flex justify-between">
           <button
             class="mx-5 px-10 py-2 order-solid border-2 border-nike-green text-white text-lg rounded-lg raise"
@@ -61,13 +82,15 @@
 
 <script>
 import LogTable from "../components/LogTable.vue";
+import NikeModal from "../components/NikeModal.vue";
 import axios from "axios";
 import { ConcurrencyManager } from "axios-concurrency";
 // @ is an alias to /src
 
 export default {
   components: {
-    LogTable
+    LogTable,
+    NikeModal
   },
   mounted() {
     this.$nextTick(function() {
@@ -114,7 +137,11 @@ export default {
         { prop: "status", name: "Proxies" }
       ],
       proxyData: this.$store.getters.proxyList,
-      groupData: this.$store.getters.proxyGroupList
+      groupData: this.$store.getters.proxyGroupList,
+
+      // Save Proxy Group Name Dialog
+      showGroupNameDlg: false,
+      newProxyGroupName: ""
     };
   },
   methods: {
@@ -139,6 +166,7 @@ export default {
         }
       };
 
+      this.showGroupNameDlg = true;
       this.forceRerenderProxyGroupTable();
       this.$store.commit("SET_PROXY_LIST", this.proxyData);
     },
@@ -213,6 +241,7 @@ export default {
       // will eject the request and response handlers from your instance
       // manager.detach();
     },
+
     saveGroup() {
       // let setting = this.$store.getters.accountSettings;
       this.$store.commit("SET_PROXY_GROUP_LIST", this.groupData);
@@ -222,7 +251,11 @@ export default {
       this.groupData = {};
       this.forceRerenderProxyGroupTable();
     },
-    newGroup() {}
+    newGroup() {},
+
+    closeGroupNameDlg() {},
+
+    saveProxyGroupName() {}
   }
 };
 </script>

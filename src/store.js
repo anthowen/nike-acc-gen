@@ -290,7 +290,7 @@ export default new Vuex.Store({
 
     // Push new log
     ADD_TO_APP_LOGS: (state, payload) => {
-      state.appLogs.push(payload);
+      state.appLogs.unshift(payload);
     },
 
     UpdateProfileList(state) {

@@ -90,6 +90,9 @@ const doCreate = async (page, io, user, sms) => {
     };
 
     const numberCallback = async phoneNum => {
+      if (isNaN(phoneNum)) {
+        throw new Error(phoneNum.charAt(0).toUpperCase() + phoneNum.slice(1));
+      }
       if (phoneNum.startsWith("86") && phoneNum.length > 10) {
         phoneNum = phoneNum.slice(2, phoneNum.length);
       }

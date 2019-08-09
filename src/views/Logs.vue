@@ -71,7 +71,7 @@ export default {
   },
   methods: {
     addLogHistory(message, tag, index) {
-      this.logData.push({
+      this.logData.unshift({
         message: message,
         type: tag + (!index ? "" : " #" + index),
         time: new Date().toLocaleString()
