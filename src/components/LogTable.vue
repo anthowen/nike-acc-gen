@@ -15,8 +15,9 @@
           v-for="(value, name) in row"
           :key="name"
           class="table-cell bg-nike-darkest border-nike-border p-3 text-grey"
+          v-bind:class="{hidden: name.startsWith('_')}"
         >
-          <div v-if="name !=='status' && name !=='email'">{{ value }}</div>
+          <div v-if="!name.startsWith('_') && name !=='status'">{{ value }}</div>
           <div v-if="name ==='status'">
             <span
               class="float-left"

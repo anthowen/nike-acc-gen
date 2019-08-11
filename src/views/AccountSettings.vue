@@ -212,8 +212,9 @@ export default {
       currentProvider: "",
       availableSmsCountryList: {
         getsmscode: [
-          // { name: "United States" }, 
-          { name: "China" }],
+          // { name: "United States" },
+          { name: "China" }
+        ],
         pvacodes: [
           { name: "United States" },
           { name: "United Kingdom" },
@@ -371,7 +372,8 @@ export default {
             code: 0,
             message: "Idle"
           },
-          email: ""
+          _email: "",
+          _birthdate: this.settings.birthdate
         };
 
       // Pre settings
@@ -389,22 +391,37 @@ export default {
       for (var i = 0; i < this.settings.accountQuantity; i++) {
         let item = Object.assign({}, dummy);
 
+        // random profiles : Name, Password, Date of Birth
+        if (this.settings.randomNameSupported) {
+          item.first_name = faker.name.firstName();
+          item.last_name = faker.name.lastName();
+        }
+
+        if (this.settings.randomPasswordSupported) {
+          item.password = faker.internet.password(10);
+        }
+
+        if (this.settings.randomDobSupported) {
+          item._birthdate =
+            faker.random.number(29) +
+            "/" +
+            faker.random.number(13) +
+            "/" +
+            faker.random.number({ min: 1950, max: 1999 });
+        }
+
+        // Email and Email Template setting
         if (this.settings.generatorType.type === 1) {
-          item.email = dotEmails[Math.floor(Math.random() * dotEmails.length)];
+          item._email = dotEmails[Math.floor(Math.random() * dotEmails.length)];
         } else if (this.settings.generatorType.type === 2) {
-          item.email = item.e_template + "+" + this.getRandomString(6);
+          item._email = item.e_template + "+" + this.getRandomString(6);
         } else if (this.settings.generatorType.type === 3) {
-          item.email = this.getRandomString(10);
+          item._email =
+            item.first_name.toLowerCase() + "." + item.last_name.toLowerCase();
         }
 
-        item.e_template = item.email;
-        item.email += item.e_domain;
-
-        // random profiles
-
-        if(this.settings.randomNameSupported){
-
-        }
+        item.e_template = item._email;
+        item._email += item.e_domain;
 
         data.push(item);
       }
