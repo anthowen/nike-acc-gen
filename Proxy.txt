@@ -10,6 +10,6 @@
 69.171.219.200:14888:proxy1899d60:vNm1Qa1Oh
 45.81.244.16:3101:revolve:proxies
 45.81.244.17:3101:revolve:proxies
-45.81.244.18:3101:revolve:proxiesp
+45.81.244.18:3101:revolve:proxies
 45.81.244.19:3101:revolve:proxies
 45.81.244.20:3101:revolve:proxies

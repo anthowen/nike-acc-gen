@@ -16,30 +16,29 @@
         ></log-table>
 
         <!-- Modal dialgo part for showing Save Proxy Group Name dialog -->
-        <nike-modal :show="showGroupNameDlg" @close="closeGroupNameDlg">
+        <nike-modal :show="showGroupNameDlg" @close="showGroupNameDlg=false">
           <div class="modal-header">
             <h3>Save proxies into a new group</h3>
+            <span class="text-nike-red mt-1">{{groupNameError}}</span>
           </div>
           <div class="modal-body">
             <label class="form-label">
               Group Name
-              <input
-                type="text"
-                v-model="newProxyGroupName"
-                rows="5"
-                class="form-control"
-              />
+              <input type="text" v-model="newProxyGroupName" class="form-control" />
             </label>
           </div>
           <div class="modal-footer text-right">
-            <button class="modal-default-button" @click="saveProxyGroupName()">Save</button>
+            <button
+              class="px-4 py-2 modal-default-button order-solid border-2 border-green-darker text-grey text-lg rounded-lg slide"
+              @click="saveProxiesIntoGroup()"
+            >Save</button>
           </div>
         </nike-modal>
 
         <div class="button-group flex justify-between">
           <button
             class="mx-5 px-10 py-2 order-solid border-2 border-nike-green text-white text-lg rounded-lg raise"
-            @click="saveProxies"
+            @click="showGroupNameDlg=true"
           >Save</button>
           <button
             class="mx-5 px-10 py-2 order-solid border-2 border-nike-red text-white text-lg rounded-lg raise"
@@ -85,6 +84,7 @@ import LogTable from "../components/LogTable.vue";
 import NikeModal from "../components/NikeModal.vue";
 import axios from "axios";
 import { ConcurrencyManager } from "axios-concurrency";
+import Vue from "vue";
 // @ is an alias to /src
 
 export default {
@@ -96,18 +96,11 @@ export default {
     this.$nextTick(function() {
       this.proxyData = this.$store.getters.proxyList;
       this.groupData = this.$store.getters.proxyGroupList;
+      this.setGroupTableData();
       console.log("Proxies page : After did mount");
     });
   },
-  computed: {
-    groupTableData() {
-      let data = [];
-      for (let key in this.groupData) {
-        data.push({ name: key, status: this.groupData[key].status });
-      }
-      return data;
-    }
-  },
+  computed: {},
   sockets: {
     ProxyStatus(data) {
       let self = this;
@@ -138,13 +131,27 @@ export default {
       ],
       proxyData: this.$store.getters.proxyList,
       groupData: this.$store.getters.proxyGroupList,
+      groupTableData: [],
 
       // Save Proxy Group Name Dialog
       showGroupNameDlg: false,
-      newProxyGroupName: ""
+      newProxyGroupName: "",
+      groupNameError: ""
     };
   },
   methods: {
+    setGroupTableData() {
+      console.log("groupTableData computed");
+      this.groupTableData = [];
+      for (let key in this.groupData) {
+        this.groupTableData.push({
+          name: key,
+          status: this.groupData[key].status
+        });
+      }
+
+      this.forceRerenderProxyGroupTable();
+    },
     forceRerenderProxyTable() {
       this.proxyTableKey += 1;
     },
@@ -154,21 +161,7 @@ export default {
     },
 
     saveProxies() {
-      // let setting = this.$store.getters.accountSettings;
-      const groupNames = Object.getOwnPropertyNames(this.groupData);
-      var length = groupNames ? groupNames.length : 0;
-
-      this.groupData["Group" + (length + 1)] = {
-        proxies: this._.cloneDeep(this.proxyData),
-        status: {
-          code: 3,
-          message: this.proxyData.length
-        }
-      };
-
       this.showGroupNameDlg = true;
-      this.forceRerenderProxyGroupTable();
-      this.$store.commit("SET_PROXY_LIST", this.proxyData);
     },
 
     clearProxies() {
@@ -253,9 +246,39 @@ export default {
     },
     newGroup() {},
 
-    closeGroupNameDlg() {},
+    closeGroupNameDlg() {
+      this.showGroupNameDlg = false;
+    },
 
-    saveProxyGroupName() {}
+    setGroupNameError(err) {
+      this.groupNameError = err;
+      setInterval(() => (this.groupNameError = ""), 1500);
+    },
+
+    saveProxiesIntoGroup() {
+      if (!this.newProxyGroupName) {
+        this.setGroupNameError("Group name cannot be empty");
+        return;
+      } else if (this.newProxyGroupName in this.groupData) {
+        this.setGroupNameError("Duplicated group name");
+        return;
+      }
+      // let setting = this.$store.getters.accountSettings;
+      this.groupData[this.newProxyGroupName] = {
+        proxies: this._.cloneDeep(this.proxyData),
+        status: {
+          code: 3,
+          message: this.proxyData.length
+        }
+      };
+
+      // Vue.set(this.groupData, 'groupData', )
+
+      this.setGroupTableData();
+      this.$store.commit("SET_PROXY_LIST", this.proxyData);
+      this.showGroupNameDlg = false;
+      this.newProxyGroupName = "";
+    }
   }
 };
 </script>

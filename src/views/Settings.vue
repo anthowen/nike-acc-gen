@@ -169,7 +169,10 @@ export default {
         { name: "6" }
       ],
       availableSmsCountryList: {
-        getsmscode: [{ name: "US" }, { name: "CN" }],
+        getsmscode: [
+          // { name: "US" },
+          { name: "CN" }
+        ],
         pvacodes: [{ name: "US" }, { name: "UK" }, { name: "CN" }],
         smspva: [{ name: "UK" }],
         smsaccs: [{ name: "US" }, { name: "UK" }]

@@ -90,8 +90,8 @@
     const proxyElements = data.proxy.split(":");
 
     const browser = await puppeteer.launch({
-      // headless: false,
-      // slowMo: 100,
+      headless: false,
+      slowMo: 100,
       args: [
         "--disable-infobars",
         "--window-position=0,0",

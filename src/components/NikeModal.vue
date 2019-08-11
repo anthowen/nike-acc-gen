@@ -26,7 +26,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .modal-mask {
   position: fixed;
   z-index: 9998;
@@ -39,19 +39,25 @@ export default {
 }
 
 .modal-container {
-  width: 300px;
-  margin: 40px auto 0;
+  width: 450px;
+  margin: 100px auto 0;
   padding: 20px 30px;
-  background-color: #fff;
-  border-radius: 2px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
+  background-color: config("colors.nike-darkest");
+  border: 1px solid config("colors.nike-grey");
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(52, 252, 142, 0.33);
   transition: all 0.3s ease;
   font-family: Helvetica, Arial, sans-serif;
 }
 
-.modal-header h3 {
-  margin-top: 0;
-  color: #42b983;
+.modal-header h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin-top: 1em;
+  color: config("colors.grey-light");
 }
 
 .modal-body {
@@ -65,6 +71,7 @@ export default {
 .form-label {
   display: block;
   margin-bottom: 1em;
+  color: config("colors.grey-light");
 }
 
 .form-label > .form-control {
@@ -74,9 +81,10 @@ export default {
 .form-control {
   display: block;
   width: 100%;
-  padding: 0.5em 1em;
-  line-height: 1.5;
+  padding: 0.5em 0.5em;
+  line-height: 1;
   border: 1px solid #ddd;
+  background: beige;
 }
 
 /*

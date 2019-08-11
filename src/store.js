@@ -40,7 +40,13 @@ export default new Vuex.Store({
       number: "432658932",
       country: { name: "China" },
       gender: { name: "Male" },
-      generatorType: { name: "Dot trick", type: 1 }
+      generatorType: { name: "Dot trick", type: 1 },
+
+      // checkbox settings for randomization
+      randomNumberSupported: true,
+      randomDobSupported: true,
+      randomNameSupported: true,
+      randomPasswordSupported: true
     },
 
     profileList: [
