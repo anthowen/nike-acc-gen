@@ -84,7 +84,6 @@ import LogTable from "../components/LogTable.vue";
 import NikeModal from "../components/NikeModal.vue";
 import axios from "axios";
 import { ConcurrencyManager } from "axios-concurrency";
-import Vue from "vue";
 // @ is an alias to /src
 
 export default {
@@ -242,6 +241,7 @@ export default {
     clearGroup() {
       Object.keys(this.groupData).forEach(k => delete this.groupData[k]);
       this.groupData = {};
+      this.groupTableData = [];
       this.forceRerenderProxyGroupTable();
     },
     newGroup() {},

@@ -33,18 +33,17 @@ const doProcess = async (
 
     await numberCallback(number);
 
-    await sleep(30000);
-    let sms = await client.getSMS({
-      service: "nike",
-      number: number
-    });
-
-    if (sms.includes("Message")) {
-      await sleep(15000);
-      sms = await client.getSMS({
+    const waitForSMS = async () => {
+      await sleep((14 + Math.random() * 3 + 1) * 1000);
+      return await client.getSMS({
         service: "nike",
         number: number
       });
+    };
+
+    let sms = await waitForSMS();
+    for (let i = 0; i < 15 && sms.includes("Message"); i++) {
+      sms = await waitForSMS();
     }
 
     const result = parseOtpMessage(sms);

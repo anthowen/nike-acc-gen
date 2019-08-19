@@ -102,7 +102,7 @@ export default {
         border-left-width: 1px;
       }
 
-      &:last-child {
+      &:not(.hidden):last-child {
         border-radius: 0 0.7rem 0.7rem 0;
         border-right-width: 1px;
       }

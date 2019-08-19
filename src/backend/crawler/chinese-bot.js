@@ -54,31 +54,36 @@ const doCreate = async (page, io, user, sms) => {
   }
 
   console.log("The chinese bot is starting...");
-  await page
-    .setViewport({ width: 1200, height: 800 })
-    .catch(error => console.log("viewport error: " + error.message));
-
-  console.log("navigating to launch page");
-  // The promise resolves after navigation has finished
-  await page.goto("https://www.nike.com/cn/launch/");
-
-  console.log("navigated to launch page");
-  //await page.click(AcceptCookies);
-  //console.log("Accepted Cookies...");
-
-  await page.waitFor(1000);
-
-  await page.click(loginBtn);
-  console.log("Login Button Clicked...");
-
-  await page.click(registerBtn);
-  console.log("Register Button Clicked");
 
   io.sockets.emit("CreateLog", {
     index: user.tableIndex,
     code: 0,
     message: "Bot started"
   });
+
+  await page
+    .setViewport({ width: 1200, height: 800 })
+    .catch(error => console.log("viewport error: " + error.message));
+
+  // The promise resolves after navigation has finished
+  await page.goto("https://www.nike.com/cn/launch/");
+
+  page.on("dialog", async dialog => {
+    console.log("dialog message", dialog.message());
+    await dialog.dismiss();
+  });
+
+  console.log("navigated to launch page");
+  //await page.click(AcceptCookies);
+  //console.log("Accepted Cookies...");
+
+  await page.waitFor(500);
+
+  await page.click(loginBtn);
+  console.log("Login Button Clicked...");
+
+  await page.click(registerBtn);
+  console.log("Register Button Clicked");
 
   await page.waitFor(2000);
 
@@ -100,7 +105,7 @@ const doCreate = async (page, io, user, sms) => {
       console.log("waiting 5s");
       await page.waitFor(5000);
       console.log("waiting done");
-      await page.screenshot({ path: "screenshot.png" });
+
       await page.click(phone);
       await page.type(phone, phoneNum);
       console.log("entered phone number");
@@ -118,6 +123,11 @@ const doCreate = async (page, io, user, sms) => {
 
       await page.click(sendNum);
       console.log("pressed send number button");
+
+      await sleep(3000);
+      // await page.screenshot({
+      //   path: `${user.firstName}.${user.lastName} after sent sms.png`
+      // });
 
       io.sockets.emit("CreateLog", {
         index: user.tableIndex,
@@ -171,6 +181,10 @@ const doCreate = async (page, io, user, sms) => {
   await sleep(8000);
   console.log("waiting done");
 
+  // await page.screenshot({
+  //   path: `${user.firstName}.${user.lastName} after login.png`
+  // });
+
   io.sockets.emit("CreateLog", {
     index: user.tableIndex,
     code: 3,
@@ -186,17 +200,21 @@ const doCreate = async (page, io, user, sms) => {
   await page.click(gender);
 
   await page.click(submit);
-  console.log("submit name and password");
+  console.log("submited name and password");
 
   io.sockets.emit("CreateLog", {
     index: user.tableIndex,
     code: 4,
-    message: "Type details"
+    message: "Inputing details"
   });
 
   console.log("waiting 8s");
   await sleep(8000);
   console.log("waiting done");
+
+  // await page.screenshot({
+  //   path: `${user.firstName}.${user.lastName} before email.png`
+  // });
 
   console.log("email: " + user.email);
   await page.type(email, user.email);
@@ -209,11 +227,6 @@ const doCreate = async (page, io, user, sms) => {
 
   await page.click(submitEmail);
   console.log("submit email");
-
-  page.on("dialog", async dialog => {
-    console.log(dialog.message());
-    await dialog.dismiss();
-  });
 
   console.log("waiting 8s");
   await sleep(8000);

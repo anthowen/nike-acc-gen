@@ -224,7 +224,7 @@ export default new Vuex.Store({
         state.createdList.push({
           country: data.country,
           number: data.number,
-          account_email: data.email,
+          account_email: data._email,
           password: data.password,
           status: {
             code: 0,

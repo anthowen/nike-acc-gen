@@ -398,7 +398,9 @@ export default {
         }
 
         if (this.settings.randomPasswordSupported) {
-          item.password = faker.internet.password(10);
+          item.password = faker.internet.password();
+          const numCounts = (item.password.match(/\d/g) || []).length;
+          if (!numCounts) item.password += "0";
         }
 
         if (this.settings.randomDobSupported) {

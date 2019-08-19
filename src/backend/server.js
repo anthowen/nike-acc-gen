@@ -7,6 +7,7 @@
   const bodyParser = require("body-parser");
   const cors = require("cors");
   const puppeteer = require("puppeteer");
+  const proxyChain = require("proxy-chain");
   const TaskQueue = require("cwait").TaskQueue;
   const activateRouter = require("./activate");
 
@@ -86,8 +87,17 @@
   app.use("/activate", activateRouter);
 
   const initializePuppeteer = async data => {
+    if (!data.mode) return;
+
     // Get Proxy Address and Proxy password
     const proxyElements = data.proxy.split(":");
+
+    // const oldProxyUrl = `http://${proxyElements[2]}:${proxyElements[3]}@${
+    //   proxyElements[0]
+    // }:${proxyElements[1]}`;
+    // const newProxyUrl = await proxyChain.anonymizeProxy(oldProxyUrl);
+
+    // console.log(newProxyUrl);
 
     const browser = await puppeteer.launch({
       headless: false,
@@ -105,6 +115,7 @@
         "--window-size=1920x1080",
         "--hide-scrollbars",
         "--proxy-server=" + proxyElements[0] + ":" + proxyElements[1]
+        // `--proxy-server=${newProxyUrl}`
       ],
       executablePath:
         process.env.NODE_ENV === "production"
@@ -119,16 +130,39 @@
       password: proxyElements[3]
     });
 
-    if (!data.mode) return;
+    await page.setRequestInterception(true);
+    // await page
+    //   .setViewport({ width: 1200, height: 800 })
+    //   .catch(error => console.log("viewport error: " + error.message));
 
-    console.log("initialize", data);
+    // Ignores image loading
+    page.on("request", req => {
+      if (
+        // req.resourceType() == "stylesheet" ||
+        req.resourceType() == "font" ||
+        req.resourceType() == "image"
+      ) {
+        req.abort();
+      } else {
+        req.continue();
+      }
+    });
 
-    if (data.mode === "create") {
-      if (data.user.country === "China")
-        await chineseAccountBot.doCreate(page, io, data.user, data.sms);
-      else await createAccountBot.doCreate(page, io, data.user, data.sms);
-    } else if (data.mode === "verify") {
-      await verifyAccountBot.doVerify(page, io, data.user, data.sms);
+    // await page.goto("https://ipinfo.io/");
+    // await page.screenshot({
+    //   path: proxyElements[0] + ":" + proxyElements[1] + "-proxyinfo.png"
+    // });
+
+    try {
+      if (data.mode === "create") {
+        if (data.user.country === "China")
+          await chineseAccountBot.doCreate(page, io, data.user, data.sms);
+        else await createAccountBot.doCreate(page, io, data.user, data.sms);
+      } else if (data.mode === "verify") {
+        await verifyAccountBot.doVerify(page, io, data.user, data.sms);
+      }
+    } catch (ex) {
+      console.log("At MainBot()", ex);
     }
 
     await browser.close();

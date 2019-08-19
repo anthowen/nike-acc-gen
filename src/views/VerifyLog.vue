@@ -88,7 +88,7 @@ export default {
         { prop: "_index", name: "ID" },
         { prop: "country", name: "Country" },
         { prop: "number", name: "Number" },
-        { prop: "acc_email", name: "Account Email" },
+        { prop: "account_email", name: "Account Email" },
         { prop: "password", name: "Account Password" },
         { prop: "status", name: "Status" }
       ],
