@@ -1,6 +1,6 @@
 ![appstore](https://github.com/blizzardsolution/nike-acc-gen/blob/master/screenshot_settings.png)
 
-# nike-acc-gen
+# Nike Account Generator v1.0
 
 ## Project setup
 ```
